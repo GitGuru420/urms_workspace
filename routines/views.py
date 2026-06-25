@@ -113,8 +113,47 @@ def view_routine(request):
 # ==========================================
 @login_required(login_url='login')
 def faculty_admin_dashboard(request):
-    if not hasattr(request.user, 'facultyadminprofile'): return redirect('login')
-    return render(request, 'routines/faculty_admin.html')
+    if not hasattr(request.user, 'facultyadminprofile'): 
+        return redirect('login')
+    
+    faculty_admin = request.user.facultyadminprofile
+    faculty = faculty_admin.faculty
+    departments = Department.objects.filter(faculty=faculty)
+    
+    # Capture GET parameters for filtering
+    selected_dept = request.GET.get('department', 'All')
+    selected_day = request.GET.get('day', 'All')
+    
+    # Base query: All routines under this specific Faculty
+    routines = Routine.objects.filter(department__faculty=faculty)
+    
+    # Apply dynamic filters
+    if selected_dept != 'All':
+        routines = routines.filter(department_id=selected_dept)
+    if selected_day != 'All':
+        routines = routines.filter(day_of_week=selected_day)
+        
+    routines = routines.select_related('course', 'teacher', 'room', 'department', 'timeslot').order_by('day_of_week', 'timeslot__start_time')
+    
+    # Aggregate Stats
+    stats = {
+        'total_depts': departments.count(),
+        'active_classes': routines.count(),
+    }
+    
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    
+    context = {
+        'faculty_admin': faculty_admin,
+        'faculty': faculty,
+        'departments': departments,
+        'routines': routines,
+        'selected_dept': selected_dept,
+        'selected_day': selected_day,
+        'stats': stats,
+        'days': days_of_week,
+    }
+    return render(request, 'routines/faculty_admin.html', context)
 
 @login_required(login_url='login')
 def dept_admin_dashboard(request):
