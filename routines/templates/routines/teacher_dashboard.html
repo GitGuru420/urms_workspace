@@ -1,0 +1,91 @@
+{% extends 'routines/base.html' %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <span class="text-xs font-bold text-slate-700 tracking-wider">URMS Workspace System Engine</span>
+        <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">
+            Secure Sign-Out 󰗼
+        </a>
+    </div>
+
+    <div class="bg-emerald-900 text-white p-6 rounded-2xl shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-widest text-emerald-300">Teacher Core Space</span>
+            <h1 class="text-3xl font-black tracking-tight">Welcome, {{ teacher.name }}</h1>
+            <p class="text-xs text-emerald-200 mt-1">Instructor Identification ID Account: <span class="font-mono font-bold bg-emerald-800 px-1.5 py-0.5 rounded">{{ teacher.teacher_id }}</span> | Department Unit: {{ teacher.department.name }}</p>
+        </div>
+        <div class="bg-emerald-800 p-4 rounded-xl text-center shadow border border-emerald-700 min-w-[140px]">
+            <span class="text-[10px] text-emerald-200 uppercase tracking-wider block font-bold">Weekly Commitment</span>
+            <span class="text-3xl font-black text-white">{{ total_weekly_classes }}</span>
+            <span class="text-[10px] text-emerald-200 block mt-0.5">Assigned Class Slots</span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+            <h3 class="text-sm font-bold text-gray-900">Day-Wise Operational Lookup Timeline</h3>
+            <p class="text-xs text-gray-500">Filter your tracking workspace schedules by specific days.</p>
+        </div>
+        <form method="GET" action="{% url 'teacher_dashboard' %}" class="flex items-center gap-2 w-full sm:w-auto">
+            <select name="day_filter" onchange="this.form.submit()" class="bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-none w-full sm:w-48">
+                <option value="All" {% if selected_day == 'All' %}selected{% endif %}>📅 Show Full Weekly Routine Matrix</option>
+                {% for day in days_of_week %}
+                    <option value="{{ day }}" {% if selected_day == day %}selected{% endif %}>{{ day }} Only</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="space-y-4">
+        <h2 class="text-base font-bold text-gray-900 px-1">
+            Displaying Agenda Target: <span class="text-emerald-700">{% if selected_day == 'All' %}Full Weekly Summary Matrix Table{% else %}{{ selected_day }} Class Agenda Schedules{% endif %}</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for r in filtered_routines %}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative border-l-4 {% if r.room.is_online %} border-l-emerald-500 {% else %} border-l-blue-600 {% endif %}">
+                    
+                    <div class="bg-slate-900 text-slate-100 px-4 py-2 text-xs font-mono font-bold flex justify-between items-center">
+                        <span>⚡ {{ r.day_of_week }}</span>
+                        <span>⏱️ {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                    </div>
+
+                    <div class="p-5 space-y-4">
+                        <div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Course Details</span>
+                            <h3 class="text-base font-black text-slate-900 leading-tight">{{ r.course.course_code }}</h3>
+                            <p class="text-xs text-gray-600 font-medium mt-0.5">{{ r.course.title }}</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100 text-xs">
+                            <div>
+                                <span class="text-[9px] uppercase text-gray-400 block font-bold tracking-wider">Target Student Batch</span>
+                                <span class="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded text-[10px] inline-block mt-0.5">
+                                    Semester {{ r.semester }} | Group {{ r.group_no }}
+                                </span>
+                                {% if r.section != 'None' %}
+                                    <span class="text-[10px] text-amber-600 font-black block mt-1">⚠️ Lab Section Split: {{ r.section }}</span>
+                                {% else %}
+                                    <span class="text-[10px] text-blue-600 font-medium block mt-1">Theory Session (Full Group)</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="text-[9px] uppercase text-gray-400 block font-bold tracking-wider">Classroom Allocation</span>
+                                <span class="font-black inline-block mt-1 {% if r.room.is_online %} text-emerald-600 {% else %} text-slate-800 {% endif %}">
+                                    {% if r.room.is_online %} 🌐 Virtual Portal {% else %} 🚪 Physical Room {{ r.room.room_number }} {% endif %}
+                                </span>
+                                <span class="text-[9px] text-gray-400 block mt-0.5 font-medium">Dept: {{ r.department.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white text-center py-16 rounded-xl border border-gray-200 text-gray-400 font-medium">
+                    🍃 Relax! You have no class sessions assigned on this timeline dashboard calendar path.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

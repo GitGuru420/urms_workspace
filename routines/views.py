@@ -2,10 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from .models import Routine, Department
 
-# Helper Function: Smart Role Router
 def redirect_based_on_role(user):
-    """Checks the user's profile relationships and redirects to their specific dashboard."""
     if hasattr(user, 'facultyadminprofile'):
         return redirect('faculty_admin_dashboard')
     elif hasattr(user, 'deptadminprofile'):
@@ -13,31 +12,26 @@ def redirect_based_on_role(user):
     elif hasattr(user, 'teacher'):
         return redirect('teacher_dashboard')
     elif user.is_superuser:
-        return redirect('/admin/') # Superusers go to Django admin
+        return redirect('/admin/')
     else:
-        return redirect('login') # Fallback for users with no assigned roles
+        return redirect('login')
 
 # ==========================================
 # AUTHENTICATION VIEWS
 # ==========================================
-
 def user_login(request):
-    # Prevent logged-in users from seeing the login page
     if request.user.is_authenticated:
         return redirect_based_on_role(request.user)
 
     if request.method == 'POST':
         u = request.POST.get('username')
         p = request.POST.get('password')
-        
         user = authenticate(request, username=u, password=p)
-        
         if user is not None:
             login(request, user)
             return redirect_based_on_role(user)
         else:
             messages.error(request, "Invalid Credentials. Access Denied.")
-            
     return render(request, 'routines/login.html')
 
 def user_logout(request):
@@ -46,26 +40,81 @@ def user_logout(request):
     return redirect('login')
 
 # ==========================================
-# DASHBOARD PLACEHOLDER VIEWS
+# TEACHER WORKSPACE MODULES
 # ==========================================
+@login_required(login_url='login')
+def teacher_dashboard(request):
+    if not hasattr(request.user, 'teacher'):
+         return redirect('login')
+         
+    teacher = request.user.teacher
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    selected_day = request.GET.get('day_filter', 'All')
+    
+    # Fetch all routines for this logged-in teacher
+    routines_qs = Routine.objects.filter(teacher=teacher).select_related('course', 'room', 'department', 'timeslot')
+    total_weekly_classes = routines_qs.count()
+    
+    # Apply day filter if specified
+    if selected_day != 'All':
+        filtered_routines = routines_qs.filter(day_of_week=selected_day)
+    else:
+        filtered_routines = routines_qs
 
+    # Sort chronological by time slots
+    filtered_routines = filtered_routines.order_by('timeslot__start_time')
+    
+    context = {
+        'teacher': teacher,
+        'total_weekly_classes': total_weekly_classes,
+        'days_of_week': days_of_week,
+        'selected_day': selected_day,
+        'filtered_routines': filtered_routines,
+    }
+    return render(request, 'routines/teacher_dashboard.html', context)
+
+
+def view_routine(request):
+    days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    departments = Department.objects.all()
+    
+    search_triggered = False
+    routines = []
+    queries = {
+        'day': request.GET.get('day', ''),
+        'department': request.GET.get('department', ''),
+        'semester': request.GET.get('semester', ''),
+        'group_no': request.GET.get('group_no', ''),
+    }
+    
+    # Check if form was submitted
+    if all([queries['day'], queries['department'], queries['semester'], queries['group_no']]):
+        search_triggered = True
+        routines = Routine.objects.filter(
+            day_of_week=queries['day'],
+            department_id=queries['department'],
+            semester=queries['semester'],
+            group_no=queries['group_no']
+        ).select_related('course', 'teacher', 'room', 'timeslot').order_by('timeslot__start_time')
+        
+    context = {
+        'days': days,
+        'departments': departments,
+        'queries': queries,
+        'search_triggered': search_triggered,
+        'routines': routines,
+    }
+    return render(request, 'routines/view_routine.html', context)
+
+# ==========================================
+# PLACEHOLDER DASHBOARDS FOR OTHER ROLES
+# ==========================================
 @login_required(login_url='login')
 def faculty_admin_dashboard(request):
-    # Security block: Only Faculty Admins allowed
-    if not hasattr(request.user, 'facultyadminprofile'):
-         return redirect('login')
+    if not hasattr(request.user, 'facultyadminprofile'): return redirect('login')
     return render(request, 'routines/faculty_admin.html')
 
 @login_required(login_url='login')
 def dept_admin_dashboard(request):
-    # Security block: Only Dept Admins allowed
-    if not hasattr(request.user, 'deptadminprofile'):
-         return redirect('login')
+    if not hasattr(request.user, 'deptadminprofile'): return redirect('login')
     return render(request, 'routines/dept_admin.html')
-
-@login_required(login_url='login')
-def teacher_dashboard(request):
-    # Security block: Only Teachers allowed
-    if not hasattr(request.user, 'teacher'):
-         return redirect('login')
-    return render(request, 'routines/teacher_dashboard.html')
