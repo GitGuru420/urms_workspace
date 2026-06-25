@@ -47,11 +47,21 @@ class Teacher(models.Model):
 # ==========================================
 
 class Room(models.Model):
+    CLASS_TYPE_CHOICES = [
+        ('Theory', 'Theory'),
+        ('Lab', 'Lab'),
+    ]
+    
+    # ✅ Scopes the room directly to a Faculty for security isolation
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, blank=True) 
     room_number = models.CharField(max_length=50, unique=True)
+    floor_no = models.CharField(max_length=20, default="1st Floor")
+    class_type = models.CharField(max_length=15, choices=CLASS_TYPE_CHOICES, default='Theory')
+    capacity = models.IntegerField(default=40, help_text="Maximum student seating capacity")
     is_online = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.room_number} {'(Online)' if self.is_online else ''}"
+        return f"{self.room_number} ({self.class_type}) - Cap: {self.capacity}"
 
 class Course(models.Model):
     course_code = models.CharField(max_length=20, unique=True)

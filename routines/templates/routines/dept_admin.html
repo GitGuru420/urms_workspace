@@ -3,87 +3,119 @@
 {% block content %}
 <div class="space-y-6">
     <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-700 tracking-wider">Department Operations Center</span>
+        <span class="text-xs font-bold text-emerald-700 tracking-wider">🟢 DEPARTMENT ADMINISTRATOR NODE</span>
         <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">Sign-Out 󰗼</a>
     </div>
 
-    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Master Controller</span>
-        <h1 class="text-3xl font-black tracking-tight mt-1">{{ department.name }} Console</h1>
-        <p class="text-xs text-slate-400 mt-2">Administered by: <span class="text-white font-semibold">{{ dept_admin.user.username }}</span></p>
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-xl text-xs font-bold {% if message.tags == 'success' %} bg-emerald-50 text-emerald-700 border border-emerald-200 {% else %} bg-red-50 text-red-700 border border-red-200 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-gradient-to-r from-emerald-800 to-teal-950 text-white p-6 rounded-2xl shadow-md border border-emerald-700 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Department Control Desk</span>
+            <h1 class="text-3xl font-black tracking-tight mt-1">{{ dept.name }} Department</h1>
+            <p class="text-xs text-emerald-100 mt-1">Parent Faculty Matrix: <span class="text-white font-bold">{{ dept.faculty.name }}</span></p>
+        </div>
+        <div class="bg-emerald-900/50 backdrop-blur-md px-4 py-2 rounded-xl border border-emerald-600/40 text-center sm:text-right">
+            <span class="text-[10px] block text-emerald-200 font-bold uppercase tracking-wider">Active Workspace</span>
+            <span class="text-sm font-black text-white font-mono">@{{ dept_admin.user.username }}</span>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 self-start">
-            <h2 class="text-lg font-extrabold text-slate-900 border-b border-gray-100 pb-3 mb-4">Assign Class Slot</h2>
-            
-            <form method="POST" action="{% url 'dept_admin_dashboard' %}" class="space-y-4">
-                {% csrf_token %}
-                
-                {% for field in form %}
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">{{ field.label }}</label>
-                    <div class="relative">
-                        {{ field }}
-                        <style>
-                            select, input { width: 100%; border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; font-size: 0.875rem; background-color: #f9fafb; outline: none; }
-                            select:focus, input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-                        </style>
-                    </div>
-                    {% if field.help_text %}
-                    <p class="text-[9px] text-gray-400 mt-1 font-medium">{{ field.help_text }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-
-                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md mt-4">
-                    Deploy Schedule Block
-                </button>
-            </form>
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 border-t-4 border-t-indigo-600">
+        <div class="mb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div>
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">🏢 Scoped Faculty Room Diagnostics</h2>
+                <p class="text-[11px] text-gray-400 font-medium">Available campus inventory layers inside your parent faculty matrix</p>
+            </div>
+            <span class="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-md font-black self-start uppercase tracking-wider">
+                👁️ Faculty Room View
+            </span>
         </div>
 
-        <div class="lg:col-span-2 space-y-4">
-            <h2 class="text-lg font-extrabold text-slate-900 px-1">Active Department Master Matrix</h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {% for r in routines %}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative group">
-                        <div class="bg-slate-100 border-b border-gray-200 px-4 py-2 text-xs font-mono font-bold flex justify-between items-center text-slate-800">
-                            <span>📅 {{ r.day_of_week }}</span>
-                            <span>⏱️ {{ r.timeslot.start_time|time:"h:i A" }}</span>
-                        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {% for room in faculty_rooms %}
+                <div class="border border-gray-200 bg-slate-50/50 p-3 rounded-xl relative shadow-2xs hover:bg-white hover:shadow-sm transition-all">
+                    <div class="absolute top-2 right-2">
+                        {% if room.class_type == 'Lab' %}
+                            <span class="text-[8px] bg-purple-100 text-purple-800 font-black px-1.5 py-0.5 rounded-full">LAB</span>
+                        {% else %}
+                            <span class="text-[8px] bg-blue-100 text-blue-800 font-black px-1.5 py-0.5 rounded-full">THEORY</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-[9px] font-mono text-gray-400 block font-bold uppercase">{{ room.floor_no }}</span>
+                    <span class="text-xs font-black text-slate-900 block mt-0.5">{{ room.room_number }}</span>
+                    <span class="text-[10px] text-slate-500 font-bold block mt-2 border-t border-gray-100 pt-1.5 font-mono">👥 {{ room.capacity }} Max</span>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-6 text-gray-400 text-xs font-medium italic">
+                    No active resource rooms mapped to your parent faculty infrastructure yet.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 
-                        <div class="p-4 space-y-2">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+        <div class="mb-4">
+            <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">📋 Active Operational Schedule</h2>
+            <p class="text-[11px] text-gray-400 font-medium">Current allocated class routine blocks managed under your department scope</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for r in routines %}
+                <div class="bg-white rounded-xl shadow-2xs border border-gray-200 overflow-hidden relative border-t-4 border-t-emerald-600">
+                    <div class="bg-slate-50 border-b border-gray-100 px-4 py-2 flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-800">{{ r.day_of_week }}</span>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-mono uppercase">
+                            {{ r.timeslot.start_time|time:"h:i A" }}
+                        </span>
+                    </div>
+                    
+                    <div class="p-4 space-y-3">
+                        <div class="flex justify-between items-start">
                             <div>
                                 <h3 class="text-sm font-black text-slate-900">{{ r.course.course_code }}</h3>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase">{{ r.teacher.name }}</p>
+                                <p class="text-[11px] text-slate-600 font-medium">{{ r.course.title }}</p>
                             </div>
-                            
-                            <div class="flex flex-wrap gap-1.5 mt-2">
-                                <span class="bg-blue-50 text-blue-700 text-[9px] font-bold px-2 py-0.5 rounded border border-blue-100">Batch: {{ r.semester }}{{ r.group_no }}</span>
-                                {% if r.section != 'None' %}<span class="bg-amber-50 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-100">Sec: {{ r.section }}</span>{% endif %}
-                                <span class="bg-slate-50 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200">
-                                    {% if r.room.is_online %}🌐 Online{% else %}🚪 Rm {{ r.room.room_number }}{% endif %}
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-2.5 space-y-1.5 text-[11px]">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold uppercase tracking-wide">Instructor:</span>
+                                <span class="font-bold text-slate-700">{{ r.teacher.name }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold uppercase tracking-wide">Target Batch:</span>
+                                <span class="font-bold text-slate-700">Semester {{ r.semester }} (Group {{ r.group_no }})</span>
+                            </div>
+                            {% if r.section and r.section != "None" %}
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold uppercase tracking-wide">Section Split:</span>
+                                <span class="font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded text-[10px]">{{ r.section }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between items-center border-t border-dashed border-gray-100 mt-2 pt-2">
+                                <span class="text-gray-400 font-semibold uppercase tracking-wide">Allocated Room:</span>
+                                <span class="font-black text-indigo-700 font-mono">
+                                    {% if r.room.is_online %}🌐 Online Portal{% else %}🚪 {{ r.room.room_number }}{% endif %}
                                 </span>
                             </div>
                         </div>
-
-                        <div class="absolute top-0 right-0 h-full w-full bg-red-900/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href="{% url 'delete_routine' r.id %}" onclick="return confirm('WARNING: Are you sure you want to completely drop this schedule block?');" 
-                               class="bg-white text-red-600 font-black px-4 py-2 rounded-lg text-xs shadow-xl hover:scale-105 transition-transform">
-                                DELETE ROUTINE BLOCK
-                            </a>
-                        </div>
                     </div>
-                {% empty %}
-                    <div class="col-span-full bg-slate-50 text-center py-12 rounded-xl border border-gray-200 text-slate-400 font-medium text-sm">
-                        No routines have been formulated for this department yet.
-                    </div>
-                {% endfor %}
-            </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-16 bg-slate-50 rounded-xl border border-dashed border-gray-300 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                    📭 No operational schedule blocks defined yet for this department node.
+                </div>
+            {% endfor %}
         </div>
-
     </div>
 </div>
 {% endblock content %}

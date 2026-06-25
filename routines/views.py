@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdminProfile, Teacher
+from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdminProfile, Teacher, Room
 
 # ==========================================
 # PUBLIC & AUTHENTICATION VIEWS
@@ -108,7 +108,7 @@ def faculty_admin_dashboard(request):
             if not dept_name:
                 messages.error(request, "Department name cannot be empty.")
             elif Department.objects.filter(name__iexact=dept_name).exists():
-                messages.error(request, f"Validation Failed: Department '{dept_name}' already exists globally.")
+                messages.error(request, f"Validation Failed: Department '{dept_name}' already exists.")
             else:
                 Department.objects.create(name=dept_name, faculty=faculty)
                 messages.success(request, f"Success! Department '{dept_name}' registered under {faculty.name}.")
@@ -121,33 +121,55 @@ def faculty_admin_dashboard(request):
             password = request.POST.get('password', '').strip()
             
             if not dept_id or not username or not password:
-                messages.error(request, "All fields are strictly required.")
+                messages.error(request, "All fields are required.")
             elif User.objects.filter(username=username).exists():
-                messages.error(request, f"Username '{username}' already exists globally.")
+                messages.error(request, f"Username '{username}' already exists.")
             else:
                 target_dept = get_object_or_404(Department, id=dept_id, faculty=faculty)
                 new_user = User.objects.create_user(username=username, password=password)
                 DeptAdminProfile.objects.create(user=new_user, department=target_dept)
-                messages.success(request, f"Success! Dept Admin token linked to {target_dept.name}.")
+                messages.success(request, f"Success! Admin account created for {target_dept.name}.")
+                return redirect('faculty_admin_dashboard')
+
+        # 🔥 NEW ACTION 3: CREATE SECURITY-SCOPED ROOM
+        elif 'create_room' in request.POST:
+            room_no = request.POST.get('room_number', '').strip()
+            floor = request.POST.get('floor_no', '').strip()
+            c_type = request.POST.get('class_type')
+            cap = request.POST.get('capacity')
+            
+            if not room_no or not floor or not c_type or not cap:
+                messages.error(request, "All room spec fields are required.")
+            elif Room.objects.filter(room_number__iexact=room_no).exists():
+                messages.error(request, f"Room '{room_no}' already exists globally.")
+            else:
+                Room.objects.create(
+                    faculty=faculty, # Force injected to lock ownership profile
+                    room_number=room_no,
+                    floor_no=floor,
+                    class_type=c_type,
+                    capacity=cap
+                )
+                messages.success(request, f"Asset Logged! Room {room_no} registered to your faculty deck.")
                 return redirect('faculty_admin_dashboard')
 
     # Fetch Data Scoped Strictly to this Faculty
     departments = Department.objects.filter(faculty=faculty).prefetch_related('deptadminprofile_set__user')
+    rooms = Room.objects.filter(faculty=faculty).order_by('floor_no', 'room_number') # ✅ Isolated room deck
     
-    # Filters logic
+    # Filters logic for Routine Radar
     selected_dept = request.GET.get('department', 'All')
     selected_day = request.GET.get('day', 'All')
     routines = Routine.objects.filter(department__faculty=faculty)
     
-    if selected_dept != 'All':
-        routines = routines.filter(department_id=selected_dept)
-    if selected_day != 'All':
-        routines = routines.filter(day_of_week=selected_day)
+    if selected_dept != 'All': routines = routines.filter(department_id=selected_dept)
+    if selected_day != 'All': routines = routines.filter(day_of_week=selected_day)
         
     routines = routines.select_related('course', 'teacher', 'room', 'department', 'timeslot').order_by('day_of_week', 'timeslot__start_time')
     
     stats = {
         'total_depts': departments.count(),
+        'total_rooms': rooms.count(), # Dynamic room tracking metric
         'active_classes': routines.count(),
     }
     
@@ -157,6 +179,7 @@ def faculty_admin_dashboard(request):
         'faculty_admin': faculty_admin,
         'faculty': faculty,
         'departments': departments,
+        'rooms': rooms,
         'routines': routines,
         'selected_dept': selected_dept,
         'selected_day': selected_day,
@@ -172,10 +195,24 @@ def faculty_admin_dashboard(request):
 def dept_admin_dashboard(request):
     if not hasattr(request.user, 'deptadminprofile'):
         return redirect('login')
+        
     dept_admin = request.user.deptadminprofile
     dept = dept_admin.department
+    parent_faculty = dept.faculty # Find upper tracking node
+    
+    # Fetch all data feeds
     routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
-    return render(request, 'routines/dept_admin.html', {'dept_admin': dept_admin, 'dept': dept, 'routines': routines})
+    
+    # ✅ Secure Isolation: Department Admin can view rooms *only* under their parent Faculty
+    faculty_rooms = Room.objects.filter(faculty=parent_faculty).order_by('floor_no', 'room_number')
+    
+    context = {
+        'dept_admin': dept_admin,
+        'dept': dept,
+        'routines': routines,
+        'faculty_rooms': faculty_rooms # Dropped seamlessly into the context pipeline
+    }
+    return render(request, 'routines/dept_admin.html', context)
 
 @login_required(login_url='login')
 def teacher_dashboard(request):
