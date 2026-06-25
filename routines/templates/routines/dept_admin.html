@@ -1,0 +1,89 @@
+{% extends 'routines/base.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <span class="text-xs font-bold text-slate-700 tracking-wider">Department Operations Center</span>
+        <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">Sign-Out 󰗼</a>
+    </div>
+
+    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Master Controller</span>
+        <h1 class="text-3xl font-black tracking-tight mt-1">{{ department.name }} Console</h1>
+        <p class="text-xs text-slate-400 mt-2">Administered by: <span class="text-white font-semibold">{{ dept_admin.user.username }}</span></p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 self-start">
+            <h2 class="text-lg font-extrabold text-slate-900 border-b border-gray-100 pb-3 mb-4">Assign Class Slot</h2>
+            
+            <form method="POST" action="{% url 'dept_admin_dashboard' %}" class="space-y-4">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">{{ field.label }}</label>
+                    <div class="relative">
+                        {{ field }}
+                        <style>
+                            select, input { width: 100%; border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; font-size: 0.875rem; background-color: #f9fafb; outline: none; }
+                            select:focus, input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+                        </style>
+                    </div>
+                    {% if field.help_text %}
+                    <p class="text-[9px] text-gray-400 mt-1 font-medium">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md mt-4">
+                    Deploy Schedule Block
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-extrabold text-slate-900 px-1">Active Department Master Matrix</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for r in routines %}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative group">
+                        <div class="bg-slate-100 border-b border-gray-200 px-4 py-2 text-xs font-mono font-bold flex justify-between items-center text-slate-800">
+                            <span>📅 {{ r.day_of_week }}</span>
+                            <span>⏱️ {{ r.timeslot.start_time|time:"h:i A" }}</span>
+                        </div>
+
+                        <div class="p-4 space-y-2">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900">{{ r.course.course_code }}</h3>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase">{{ r.teacher.name }}</p>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                <span class="bg-blue-50 text-blue-700 text-[9px] font-bold px-2 py-0.5 rounded border border-blue-100">Batch: {{ r.semester }}{{ r.group_no }}</span>
+                                {% if r.section != 'None' %}<span class="bg-amber-50 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-100">Sec: {{ r.section }}</span>{% endif %}
+                                <span class="bg-slate-50 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200">
+                                    {% if r.room.is_online %}🌐 Online{% else %}🚪 Rm {{ r.room.room_number }}{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="absolute top-0 right-0 h-full w-full bg-red-900/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a href="{% url 'delete_routine' r.id %}" onclick="return confirm('WARNING: Are you sure you want to completely drop this schedule block?');" 
+                               class="bg-white text-red-600 font-black px-4 py-2 rounded-lg text-xs shadow-xl hover:scale-105 transition-transform">
+                                DELETE ROUTINE BLOCK
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-span-full bg-slate-50 text-center py-12 rounded-xl border border-gray-200 text-slate-400 font-medium text-sm">
+                        No routines have been formulated for this department yet.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

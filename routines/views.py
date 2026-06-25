@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from .models import Routine, Department
+from .forms import RoutineForm
 
 def redirect_based_on_role(user):
     if hasattr(user, 'facultyadminprofile'):
@@ -117,4 +119,50 @@ def faculty_admin_dashboard(request):
 @login_required(login_url='login')
 def dept_admin_dashboard(request):
     if not hasattr(request.user, 'deptadminprofile'): return redirect('login')
-    return render(request, 'routines/dept_admin.html')
+    
+    dept_admin = request.user.deptadminprofile
+    department = dept_admin.department
+
+    if request.method == 'POST':
+        form = RoutineForm(request.POST)
+        if form.is_valid():
+            routine = form.save(commit=False)
+            routine.department = department # Auto-assign logged-in admin's department
+            
+            try:
+                routine.clean() # 🔥 TRIGGER CONFLICT ALGORITHM
+                routine.save()
+                messages.success(request, f"Routine for {routine.course.course_code} successfully scheduled!")
+                return redirect('dept_admin_dashboard')
+            except ValidationError as e:
+                # Catch overlap errors and send to UI
+                for error in e.messages:
+                    messages.error(request, error)
+        else:
+            messages.error(request, "Invalid form data. Please check all fields.")
+    else:
+        form = RoutineForm()
+
+    # Filter dropdowns so Admin only sees their department's courses and teachers
+    form.fields['course'].queryset = form.fields['course'].queryset.filter(department=department)
+    form.fields['teacher'].queryset = form.fields['teacher'].queryset.filter(department=department)
+
+    # Fetch existing routines for this department
+    routines = Routine.objects.filter(department=department).select_related('course', 'teacher', 'room', 'timeslot').order_by('day_of_week', 'timeslot__start_time')
+
+    context = {
+        'dept_admin': dept_admin,
+        'department': department,
+        'form': form,
+        'routines': routines,
+    }
+    return render(request, 'routines/dept_admin.html', context)
+
+@login_required(login_url='login')
+def delete_routine(request, routine_id):
+    if not hasattr(request.user, 'deptadminprofile'): return redirect('login')
+    
+    routine = get_object_or_404(Routine, id=routine_id, department=request.user.deptadminprofile.department)
+    routine.delete()
+    messages.info(request, "Routine slot removed successfully.")
+    return redirect('dept_admin_dashboard')

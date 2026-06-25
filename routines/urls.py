@@ -12,4 +12,5 @@ urlpatterns = [
     
     # Routine public/operational search lookup
     path('view-routine/', views.view_routine, name='view_routine'),
+    path('delete-routine/<int:routine_id>/', views.delete_routine, name='delete_routine'),
 ]
