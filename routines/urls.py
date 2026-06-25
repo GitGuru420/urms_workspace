@@ -11,6 +11,7 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     
     # Dashboards
+    path('root-console/', views.superuser_dashboard, name='superuser_dashboard'),
     path('faculty-dashboard/', views.faculty_admin_dashboard, name='faculty_admin_dashboard'),
     path('department-dashboard/', views.dept_admin_dashboard, name='dept_admin_dashboard'),
     path('teacher-space/', views.teacher_dashboard, name='teacher_dashboard'),
