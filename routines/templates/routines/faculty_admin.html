@@ -3,7 +3,7 @@
 {% block content %}
 <div class="space-y-6">
     <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-700 tracking-wider">High Command Operations Center</span>
+        <span class="text-xs font-bold text-slate-700 tracking-wider">🛠️ HIGH COMMAND OPERATIONS CENTER</span>
         <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">Sign-Out 󰗼</a>
     </div>
 
@@ -17,128 +17,200 @@
         </div>
     {% endif %}
 
-    <div class="bg-blue-900 text-white p-6 rounded-2xl shadow-lg border border-blue-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-6 rounded-2xl shadow-lg border border-blue-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-300">Dean / Faculty Controller</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-300">Dean / Faculty Corporate Controller</span>
             <h1 class="text-3xl font-black tracking-tight mt-1">{{ faculty.name }}</h1>
-            <p class="text-xs text-blue-200 mt-2">Authorized Officer: <span class="text-white font-semibold">{{ faculty_admin.user.username }}</span></p>
+            <p class="text-xs text-blue-200 mt-2">Active Session Token: <span class="text-white font-semibold">{{ faculty_admin.user.username }}</span></p>
         </div>
         
         <div class="flex gap-3">
-            <div class="bg-blue-800 p-3 rounded-xl text-center shadow border border-blue-700 min-w-[100px]">
+            <div class="bg-blue-800/60 backdrop-blur-md p-3 rounded-xl text-center shadow border border-blue-700 min-w-[110px]">
                 <span class="text-2xl font-black text-white">{{ stats.total_depts }}</span>
                 <span class="text-[9px] text-blue-200 uppercase tracking-wider block font-bold mt-0.5">Departments</span>
             </div>
-            <div class="bg-blue-800 p-3 rounded-xl text-center shadow border border-blue-700 min-w-[100px]">
+            <div class="bg-blue-800/60 backdrop-blur-md p-3 rounded-xl text-center shadow border border-blue-700 min-w-[110px]">
                 <span class="text-2xl font-black text-white">{{ stats.active_classes }}</span>
-                <span class="text-[9px] text-blue-200 uppercase tracking-wider block font-bold mt-0.5">Active Blocks</span>
+                <span class="text-[9px] text-blue-200 uppercase tracking-wider block font-bold mt-0.5">Active Classes</span>
             </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 h-fit">
-            <div class="mb-4">
-                <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">Create Department Admin</h2>
-                <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Binds credential authorization token fields</p>
-            </div>
+        <div class="space-y-6">
             
-            <form method="POST" class="space-y-4">
-                {% csrf_token %}
-                <input type="hidden" name="create_dept_admin" value="1">
-                
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Target Department</label>
-                    <select name="department_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
-                        <option value="" disabled selected>Select Scoped Department</option>
-                        {% for dept in departments %}
-                            <option value="{{ dept.id }}">{{ dept.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">User ID / Username</label>
-                    <input type="text" name="username" required placeholder="e.g., cse_head_admin" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Secure Password</label>
-                    <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-md">
-                    Register Admin Credentials 🔐
-                </button>
-            </form>
-        </div>
-
-        <div class="lg:col-span-2 space-y-4">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <h2 class="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Radar Scope Parameters</h2>
-                <form method="GET" class="flex flex-col sm:flex-row gap-4 items-end">
-                    <div class="w-full sm:w-5/12">
-                        <select name="department" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="All">All Departments (Global)</option>
-                            {% for dept in departments %}
-                                <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
-                            {% endfor %}
-                        </select>
+                <div class="mb-4">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">🏢 Create Department</h2>
+                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Register a fresh institutional segment</p>
+                </div>
+                
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="create_department" value="1">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Department Name</label>
+                        <input type="text" name="dept_name" required placeholder="e.g., Dept of Cyber Security" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-800">
                     </div>
-                    <div class="w-full sm:w-5/12">
-                        <select name="day" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="All">Full Weekly Timeline</option>
-                            {% for day in days %}
-                                <option value="{{ day }}" {% if selected_day == day %}selected{% endif %}>{{ day }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="w-full sm:w-2/12">
-                        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg text-[11px] uppercase tracking-wider transition-all h-[34px]">
-                            Ping
-                        </button>
-                    </div>
+                    <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-md">
+                        Register Department
+                    </button>
                 </form>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {% for r in routines %}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative border-t-4 border-t-blue-600">
-                        <div class="bg-slate-50 border-b border-gray-100 px-4 py-2 flex justify-between items-center">
-                            <span class="text-xs font-black text-slate-800">{{ r.department.name }}</span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">{{ r.day_of_week }}</span>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-sm font-black text-blue-900">{{ r.course.course_code }}</h3>
-                                    <p class="text-[10px] text-gray-500 font-bold uppercase">{{ r.teacher.name }}</p>
-                                </div>
-                                <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-1 rounded">
-                                    {{ r.timeslot.start_time|time:"h:i A" }}
-                                </span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2 text-[10px] border-t border-gray-100 pt-3">
-                                <div>
-                                    <span class="text-gray-400 block font-bold uppercase tracking-wider">Batch Target</span>
-                                    <span class="font-semibold text-slate-700">Sem {{ r.semester }} | Grp {{ r.group_no }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 block font-bold uppercase tracking-wider">Location</span>
-                                    <span class="font-bold text-slate-700">{% if r.room.is_online %}🌐 Portal{% else %}🚪 {{ r.room.room_number }}{% endif %}</span>
-                                </div>
-                            </div>
-                        </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="mb-4">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">🔑 Create Dept Admin</h2>
+                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Provision credential rights token for a department</p>
+                </div>
+                
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="create_dept_admin" value="1">
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Target Department</label>
+                        <select name="department_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
+                            <option value="" disabled selected>Select Scoped Department</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                {% empty %}
-                    <div class="col-span-full bg-blue-50 text-center py-12 rounded-xl border border-blue-100 text-blue-400 text-xs font-bold">
-                        📭 Radar clear. No active routine blocks found.
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">User ID / Username</label>
+                        <input type="text" name="username" required placeholder="e.g., cse_head_admin" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
                     </div>
-                {% endfor %}
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Secure Password</label>
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none font-medium">
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-md">
+                        Link Admin Authority
+                    </button>
+                </form>
             </div>
         </div>
 
+        # RIGHT CONTROL COLUMN: VISUAL TABLES & TIMELINE LISTS
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="mb-3">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-wider">📋 Registered Department Directory</h2>
+                    <p class="text-[11px] text-gray-400 font-medium">Active sub-segments and authorization credentials</p>
+                </div>
+                
+                <div class="overflow-x-auto border border-gray-100 rounded-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-gray-200 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Department Name</th>
+                                <th class="p-3">Assigned Username / ID</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 font-medium text-slate-700">
+                            {% for dept in departments %}
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="p-3 text-gray-400 font-mono">{{ dept.id }}</td>
+                                    <td class="p-3 font-bold text-slate-900">{{ dept.name }}</td>
+                                    <td class="p-3">
+                                        {% if dept.deptadminprofile_set.all %}
+                                            {% for profile in dept.deptadminprofile_set.all %}
+                                                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-[11px] font-black border border-blue-100 shadow-sm">
+                                                    🆔 {{ profile.user.username }}
+                                                </span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="inline-block bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded font-bold border border-amber-200/60">
+                                                ⚠️ No Admin Assigned
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="p-8 text-center text-gray-400 italic font-medium">
+                                        No departments registered under this faculty yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 class="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">🎯 Routine Radar Scope</h2>
+                    <form method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
+                        <div class="w-full sm:w-5/12">
+                            <select name="department" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="All">All Filtered Depts</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-5/12">
+                            <select name="day" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="All">Full Weekly Timeline</option>
+                                {% for day in days %}
+                                    <option value="{{ day }}" {% if selected_day == day %}selected{% endif %}>{{ day }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-2/12">
+                            <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2 px-3 rounded-lg text-[11px] uppercase tracking-wider transition-all h-[34px]">
+                                Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for r in routines %}
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative border-t-4 border-t-blue-600">
+                            <div class="bg-slate-50 border-b border-gray-100 px-4 py-2 flex justify-between items-center">
+                                <span class="text-xs font-black text-slate-800">{{ r.department.name }}</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">{{ r.day_of_week }}</span>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="text-sm font-black text-blue-900">{{ r.course.course_code }}</h3>
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase">{{ r.teacher.name }}</p>
+                                    </div>
+                                    <span class="bg-blue-50 text-blue-800 text-[10px] font-black px-2 py-1 rounded">
+                                        {{ r.timeslot.start_time|time:"h:i A" }}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-[10px] border-t border-gray-100 pt-3">
+                                    <div>
+                                        <span class="text-gray-400 block font-bold uppercase tracking-wider">Batch Target</span>
+                                        <span class="font-semibold text-slate-700">Sem {{ r.semester }} | Grp {{ r.group_no }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400 block font-bold uppercase tracking-wider">Location</span>
+                                        <span class="font-bold text-slate-700">{% if r.room.is_online %}🌐 Portal{% else %}🚪 {{ r.room.room_number }}{% endif %}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full bg-blue-50 text-center py-12 rounded-xl border border-blue-100 text-blue-400 text-xs font-bold">
+                            📭 Radar clear. No active routine blocks found.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
 {% endblock content %}

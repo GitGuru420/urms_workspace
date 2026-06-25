@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdminProfile, Teacher
 
 # ==========================================
@@ -42,7 +42,7 @@ def user_logout(request):
     return redirect('landing_page')
 
 # ==========================================
-# NEW: SUPERUSER MASTER DASHBOARD
+# SUPERUSER MASTER DASHBOARD
 # ==========================================
 @login_required(login_url='login')
 def superuser_dashboard(request):
@@ -54,11 +54,9 @@ def superuser_dashboard(request):
     selected_dept_id = request.GET.get('department', 'All')
     selected_day = request.GET.get('day', 'All')
     
-    # Base queries
     departments = Department.objects.all()
     routines = Routine.objects.all()
     
-    # Cascade Filters
     if selected_faculty_id != 'All':
         departments = departments.filter(faculty_id=selected_faculty_id)
         routines = routines.filter(department__faculty_id=selected_faculty_id)
@@ -92,7 +90,7 @@ def superuser_dashboard(request):
     return render(request, 'routines/superuser.html', context)
 
 # ==========================================
-# UPGRADED: FACULTY ADMIN DASHBOARD + DEPT ADMIN CREATION
+# UPGRADED: FACULTY ADMIN WORKSPACE (With Create Dept & Admin Lookup)
 # ==========================================
 @login_required(login_url='login')
 def faculty_admin_dashboard(request):
@@ -102,29 +100,41 @@ def faculty_admin_dashboard(request):
     faculty_admin = request.user.facultyadminprofile
     faculty = faculty_admin.faculty
     
-    # Scoped strictly to this Faculty
-    departments = Department.objects.filter(faculty=faculty)
-    
-    # Process Create Department Admin Form Form POST
-    if request.method == 'POST' and 'create_dept_admin' in request.POST:
-        dept_id = request.POST.get('department_id')
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '').strip()
-        
-        if not dept_id or not username or not password:
-            messages.error(request, "All fields are strictly required.")
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, f"Username '{username}' already exists globally.")
-        else:
-            target_dept = get_object_or_404(Department, id=dept_id, faculty=faculty)
-            # Create Core Auth User
-            new_user = User.objects.create_user(username=username, password=password)
-            # Bind to Dept Profile Matrix
-            DeptAdminProfile.objects.create(user=new_user, department=target_dept)
-            messages.success(request, f"Success! Dept Admin assigned to {target_dept.name}.")
-            return redirect('faculty_admin_dashboard')
+    # Process POST Forms
+    if request.method == 'POST':
+        # 1. Action: CREATE DEPARTMENT
+        if 'create_department' in request.POST:
+            dept_name = request.POST.get('dept_name', '').strip()
+            if not dept_name:
+                messages.error(request, "Department name cannot be empty.")
+            elif Department.objects.filter(name__iexact=dept_name).exists():
+                messages.error(request, f"Validation Failed: Department '{dept_name}' already exists globally.")
+            else:
+                Department.objects.create(name=dept_name, faculty=faculty)
+                messages.success(request, f"Success! Department '{dept_name}' registered under {faculty.name}.")
+                return redirect('faculty_admin_dashboard')
 
-    # Filtering Logic
+        # 2. Action: CREATE DEPARTMENT ADMIN 
+        elif 'create_dept_admin' in request.POST:
+            dept_id = request.POST.get('department_id')
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '').strip()
+            
+            if not dept_id or not username or not password:
+                messages.error(request, "All fields are strictly required.")
+            elif User.objects.filter(username=username).exists():
+                messages.error(request, f"Username '{username}' already exists globally.")
+            else:
+                target_dept = get_object_or_404(Department, id=dept_id, faculty=faculty)
+                new_user = User.objects.create_user(username=username, password=password)
+                DeptAdminProfile.objects.create(user=new_user, department=target_dept)
+                messages.success(request, f"Success! Dept Admin token linked to {target_dept.name}.")
+                return redirect('faculty_admin_dashboard')
+
+    # Fetch Data Scoped Strictly to this Faculty
+    departments = Department.objects.filter(faculty=faculty).prefetch_related('deptadminprofile_set__user')
+    
+    # Filters logic
     selected_dept = request.GET.get('department', 'All')
     selected_day = request.GET.get('day', 'All')
     routines = Routine.objects.filter(department__faculty=faculty)
@@ -156,7 +166,7 @@ def faculty_admin_dashboard(request):
     return render(request, 'routines/faculty_admin.html', context)
 
 # ==========================================
-# DEPENDENT INNER WORKSPACES (Keep unchanged)
+# DEPENDENT INNER WORKSPACES (Unchanged)
 # ==========================================
 @login_required(login_url='login')
 def dept_admin_dashboard(request):
