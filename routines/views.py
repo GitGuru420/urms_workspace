@@ -6,6 +6,13 @@ from django.contrib.auth.decorators import login_required
 from .models import Routine, Department
 from .forms import RoutineForm
 
+# ==========================================
+# PUBLIC VIEWS
+# ==========================================
+def landing_page(request):
+    """The main entry point for the university routine system."""
+    return render(request, 'routines/index.html')
+
 def redirect_based_on_role(user):
     if hasattr(user, 'facultyadminprofile'):
         return redirect('faculty_admin_dashboard')
