@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Routine Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 font-sans antialiased min-h-screen flex flex-col">
+
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl shadow-lg border text-xs font-semibold flex items-center justify-between {% if message.tags == 'error' %} bg-red-50 border-red-200 text-red-800 {% else %} bg-emerald-50 border-emerald-200 text-emerald-800 {% endif %}" onclick="this.remove()">
+            <span>{{ message }}</span>
+            <button class="ml-2 text-[10px] uppercase tracking-wider opacity-60 hover:opacity-100">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 font-medium">
+        &copy; 2026 URMS Enterprise Software Workspace. All Rights Reserved.
+    </footer>
+
+</body>
+</html>
