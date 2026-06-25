@@ -56,3 +56,30 @@ class RoutineAdmin(admin.ModelAdmin):
     list_display = ('course', 'teacher', 'room', 'timeslot', 'day_of_week', 'semester', 'group_no', 'section')
     list_filter = ('day_of_week', 'semester', 'group_no', 'department', 'room__is_online')
     search_fields = ('course__course_code', 'teacher__name', 'room__room_number')
+    
+    
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+
+# 1. Define Inlines for each role profile
+class FacultyAdminInline(admin.StackedInline):
+    model = FacultyAdminProfile
+    can_delete = False
+    verbose_name_plural = 'Faculty Admin Role Extension'
+
+class DeptAdminInline(admin.StackedInline):
+    model = DeptAdminProfile
+    can_delete = False
+    verbose_name_plural = 'Department Admin Role Extension'
+
+class TeacherInline(admin.StackedInline):
+    model = Teacher
+    can_delete = False
+    verbose_name_plural = 'Teacher Role Extension'
+
+# 2. Unregister default UserAdmin and Register the customized one
+admin.site.unregister(User)
+
+@admin.register(User)
+class CustomUserAdmin(BaseUserAdmin):
+    inlines = (FacultyAdminInline, DeptAdminInline, TeacherInline)
