@@ -8,12 +8,9 @@
             <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Search Class Routines</h1>
             <p class="text-sm text-gray-500">Select parameters to look up current course schedule blocks.</p>
         </div>
-        <div class="flex gap-2 w-full sm:w-auto">
-            <a href="{% url 'landing_page' %}" class="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-all flex items-center gap-1">
-                🏠 Go to Homepage
-            </a>
-            <a href="{% url 'login' %}" class="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-all flex items-center">
-                Portal Workspace →
+        <div>
+            <a href="{% url 'landing_page' %}" class="text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                Homepage
             </a>
         </div>
     </div>
@@ -23,7 +20,7 @@
         <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Day Name <span class="text-red-500">*</span></label>
     <select name="day" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-        <option value="">-- Choose Day --</option>
+        <option value="">Choose Day</option>
         {% for d in days %}
             <option value="{{ d }}" {% if queries.day == d %}selected{% endif %}>{{ d }}</option>
         {% endfor %}
@@ -33,7 +30,7 @@
         <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Department <span class="text-red-500">*</span></label>
             <select name="department" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">-- Choose Department --</option>
+                <option value="">Choose Department</option>
                 {% for dept in departments %}
                     <option value="{{ dept.id }}" {% if queries.department == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
                 {% endfor %}
@@ -43,7 +40,7 @@
         <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Semester No. <span class="text-red-500">*</span></label>
             <select name="semester" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">-- Choose Semester --</option>
+                <option value="">Choose Semester</option>
                 <option value="1" {% if queries.semester == "1" %}selected{% endif %}>Semester 1</option>
                 <option value="2" {% if queries.semester == "2" %}selected{% endif %}>Semester 2</option>
                 <option value="3" {% if queries.semester == "3" %}selected{% endif %}>Semester 3</option>
@@ -62,7 +59,7 @@
         <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Group Identifier <span class="text-red-500">*</span></label>
             <select name="group_no" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">-- Choose Group --</option>
+                <option value="">Choose Group</option>
                 <option value="A" {% if queries.group_no == "A" %}selected{% endif %}>Group A</option>
                 <option value="B" {% if queries.group_no == "B" %}selected{% endif %}>Group B</option>
                 <option value="C" {% if queries.group_no == "C" %}selected{% endif %}>Group C</option>
@@ -89,7 +86,7 @@
                             <div class="bg-slate-800 text-slate-100 px-4 py-2 text-xs font-mono font-bold flex justify-between items-center">
                                 <span>⏱️ {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
                                 <span class="uppercase tracking-wider px-1.5 py-0.5 rounded text-[10px] {% if r.section != 'None' %} bg-amber-500 text-slate-900 {% else %} bg-blue-600 text-white {% endif %}">
-                                    {% if r.section != 'None' %} Lab Split (Sec {{ r.section }}) {% else %} Full Theory {% endif %}
+                                    {% if r.section != 'None' %} Lab Split (Sec {{ r.section }}) {% else %} Theory {% endif %}
                                 </span>
                             </div>
 
@@ -105,9 +102,11 @@
                                         <span class="font-semibold text-gray-800">{{ r.teacher.name }}</span>
                                     </div>
                                     <div>
-                                        <span class="text-[10px] uppercase text-gray-400 block tracking-wider">Location Room</span>
+                                        <span class="font-bold {% if r.room.is_online %} text-emerald-600 {% else %} text-gray-800 {% endif %} block">
+                                            {% if r.room.is_online %} Online Class {% else %} Floor: {{ r.room.floor_no }} {% endif %}
+                                        </span>
                                         <span class="font-bold {% if r.room.is_online %} text-emerald-600 {% else %} text-gray-800 {% endif %}">
-                                            {% if r.room.is_online %} 🌐 Online Class {% else %} 🚪 Room {{ r.room.room_number }} {% endif %}
+                                            {% if r.room.is_online %} Online Class {% else %} Room: {{ r.room.room_number }} {% endif %}
                                         </span>
                                     </div>
                                 </div>
