@@ -4,9 +4,12 @@
 <div class="space-y-8">
     
     <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-700 tracking-wider">URMS Workspace System Engine</span>
+        <a href="{% url 'teacher_dashboard' %}" class="text-xs font-bold text-slate-700 tracking-wider hover:text-indigo-600 transition-colors cursor-pointer">
+        URMS Teacher Dashboard
+        </a>
+    
         <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">
-            Secure Sign-Out 󰗼
+        Sign-Out
         </a>
     </div>
 
@@ -14,7 +17,7 @@
         <div>
             <span class="text-xs font-bold uppercase tracking-widest text-emerald-300">Teacher Core Space</span>
             <h1 class="text-3xl font-black tracking-tight">Welcome, {{ teacher.name }}</h1>
-            <p class="text-xs text-emerald-200 mt-1">Instructor Identification ID Account: <span class="font-mono font-bold bg-emerald-800 px-1.5 py-0.5 rounded">{{ teacher.teacher_id }}</span> | Department Unit: {{ teacher.department.name }}</p>
+            <p class="text-xs text-emerald-200 mt-1">Teacher ID: <span class="font-mono font-bold bg-emerald-800 px-1.5 py-0.5 rounded">{{ teacher.teacher_id }}</span> | User ID: <span class="font-mono font-bold bg-emerald-800 px-1.5 py-0.5 rounded">{{ teacher.user }}</span> | Department: {{ teacher.department.name }}</p>
         </div>
         <div class="bg-emerald-800 p-4 rounded-xl text-center shadow border border-emerald-700 min-w-[140px]">
             <span class="text-[10px] text-emerald-200 uppercase tracking-wider block font-bold">Weekly Commitment</span>
@@ -25,22 +28,16 @@
 
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-5">
         <div>
-            <h2 class="text-base font-black uppercase tracking-wide text-gray-900">🔍 Advanced Routine Search & Export</h2>
-            <p class="text-xs text-gray-500 mt-1">Query your personalized routines using dynamic time, room or day parameters.</p>
+            <h2 class="text-base font-black uppercase tracking-wide text-gray-900">🔍 Find Your Routine & Export</h2>
+            <p class="text-xs text-gray-500 mt-1">Query your personalized routines using dynamic time or day parameters.</p>
         </div>
         
         <form method="GET" class="bg-slate-50 p-5 rounded-xl border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
                 <select name="search_day" class="bg-white border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-slate-400 transition-shadow">
                     <option value="">All Days</option>
                     {% for d in days %} 
                         <option value="{{ d }}" {% if request.GET.search_day == d %}selected{% endif %}>{{ d }}</option> 
-                    {% endfor %}
-                </select>
-                <select name="search_room" class="bg-white border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-slate-400 transition-shadow">
-                    <option value="">All Rooms</option>
-                    {% for r in faculty_rooms %} 
-                        <option value="{{ r.id }}" {% if request.GET.search_room == r.id|stringformat:"s" %}selected{% endif %}>Room {{ r.room_number }}</option> 
                     {% endfor %}
                 </select>
                 <select name="search_time" class="bg-white border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-slate-400 transition-shadow">
@@ -61,26 +58,29 @@
         </form>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2 pt-2">
-            {% for r in master_routines %}
-                <div class="p-4 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex justify-between font-bold mb-2 text-slate-800">
-                        <span>{{ r.day_of_week|slice:":3" }} • {{ r.timeslot.start_time|time:"h:i A" }}</span>
-                        <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px]">R:{{ r.room.room_number }}</span>
-                    </div>
-                    <div class="font-black text-indigo-700 text-base mb-1">{{ r.course.course_code }}</div>
-                    <div class="text-gray-600 font-medium space-y-1">
-                        <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
-                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] text-gray-400">
-                            Sem {{ r.semester }} | Group {{ r.group_no }}
-                        </div>
-                    </div>
+    {% for r in master_routines %}
+        <div class="p-4 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-center font-bold mb-2 text-slate-800">
+                <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px]">Room: {{ r.room.room_number }} <br> Floor: {{ r.room.floor_no }}</span>
+            </div>
+            
+            <div class="font-black text-indigo-700 text-base mb-1">{{ r.course.course_code }}</div>
+            
+            <div class="text-gray-600 font-medium space-y-1">
+                <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
+                
+                <div class="pt-2 mt-2 border-t border-gray-200 text-[11px]">
+                    <span class="block text-gray-400">Sem {{ r.semester }} | Group {{ r.group_no }}</span>
                 </div>
-            {% empty %}
-                <div class="col-span-full text-center py-16 text-gray-400 font-bold text-sm border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                    No classes found matching the selected filters.
-                </div>
-            {% endfor %}
+            </div>
         </div>
+    {% empty %}
+        <div class="col-span-full text-center py-16 text-gray-400 font-bold text-sm border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+            No classes found matching the selected filters.
+        </div>
+    {% endfor %}
+</div>
     </div>
 
 </div>

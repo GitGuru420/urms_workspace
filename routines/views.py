@@ -349,23 +349,19 @@ def dept_admin_dashboard(request):
     }
     return render(request, 'routines/dept_admin.html', context)
 
+""" TEACHER DASHBOARD VERSION-1 DONE"""
 @login_required(login_url='login')
 def teacher_dashboard(request):
-    # 1. Get Logged-in Teacher Info
+    # Get Logged-in Teacher Info
     teacher = get_object_or_404(Teacher, user=request.user)
-    
-    # We kept this because your UI still shows the "Weekly Commitment" number at the top right!
+    # Count Total Class In a Week
     total_weekly_classes = Routine.objects.filter(teacher=teacher).count()
 
-    # -------------------------------------------------------------
     # LOGIC: Advanced Search Parameters
-    # -------------------------------------------------------------
     days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    faculty_rooms = Room.objects.all().order_by('room_number')
     timeslots = Timeslot.objects.all().order_by('start_time')
 
     search_day = request.GET.get('search_day')
-    search_room = request.GET.get('search_room')
     search_time = request.GET.get('search_time')
 
     # Base query for Global Master Routine
@@ -374,23 +370,17 @@ def teacher_dashboard(request):
     # Apply filters dynamically if user searched for anything
     if search_day:
         master_routines = master_routines.filter(day_of_week=search_day)
-    if search_room:
-        master_routines = master_routines.filter(room_id=search_room)
     if search_time:
         master_routines = master_routines.filter(timeslot_id=search_time)
 
-    # -------------------------------------------------------------
     # LOGIC: CSV Export Handler
-    # -------------------------------------------------------------
     if request.GET.get('export_csv') == '1':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{teacher.name}_Routine_Export.csv"'
         
         writer = csv.writer(response)
-        # Write CSV Headers (Removed Teacher Column since it's just for this teacher)
         writer.writerow(['Day', 'Time', 'Course Code', 'Course Title', 'Room', 'Semester', 'Group'])
         
-        # Write Data Rows
         for r in master_routines:
             writer.writerow([
                 r.day_of_week,
@@ -406,10 +396,7 @@ def teacher_dashboard(request):
     context = {
         'teacher': teacher,
         'total_weekly_classes': total_weekly_classes,
-        
-        # Context Variables for Advanced Search (Teacher dropped)
         'days': days,
-        'faculty_rooms': faculty_rooms,
         'timeslots': timeslots,
         'master_routines': master_routines,
     }
