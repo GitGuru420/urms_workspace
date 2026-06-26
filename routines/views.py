@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate, login, logout
 from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdminProfile, Teacher, Room, Timeslot, Course
 import csv
@@ -248,7 +249,9 @@ def dept_admin_dashboard(request):
     parent_faculty = dept.faculty
     
     if request.method == 'POST':
+        # ---------------------------------------------------------
         # FEATURE 1: CREATE TEACHER
+        # ---------------------------------------------------------
         if 'create_teacher' in request.POST:
             teacher_id = request.POST.get('teacher_id', '').strip()
             name = request.POST.get('name', '').strip()
@@ -265,7 +268,9 @@ def dept_admin_dashboard(request):
                 messages.success(request, f"Success! Teacher {name} ({teacher_id}) created.")
             return redirect('dept_admin_dashboard')
             
+        # ---------------------------------------------------------
         # FEATURE 2: CREATE COURSE
+        # ---------------------------------------------------------
         elif 'create_course' in request.POST:
             code = request.POST.get('course_code', '').strip()
             title = request.POST.get('title', '').strip()
@@ -277,7 +282,9 @@ def dept_admin_dashboard(request):
                 messages.success(request, f"Course [{code}] successfully added.")
             return redirect('dept_admin_dashboard')
             
-        # FEATURE 3: ASSIGN ROUTINE
+        # ---------------------------------------------------------
+        # FEATURE 3: ASSIGN ROUTINE (Updated with Error Handling)
+        # ---------------------------------------------------------
         elif 'assign_routine' in request.POST:
             course_id = request.POST.get('course_id')
             teacher_id_fk = request.POST.get('teacher_id_fk')
@@ -293,15 +300,31 @@ def dept_admin_dashboard(request):
             room_obj = get_object_or_404(Room, id=room_id, faculty=parent_faculty)
             timeslot_obj = get_object_or_404(Timeslot, id=timeslot_id)
             
-            Routine.objects.create(
-                department=dept, course=course_obj, teacher=teacher_obj,
-                room=room_obj, timeslot=timeslot_obj, semester=semester,
-                group_no=group_no, day_of_week=day, section=section
-            )
-            messages.success(request, "Routine block assigned successfully!")
+            try:
+                # 1. Initialize the Routine object WITHOUT saving it to DB yet
+                new_routine = Routine(
+                    department=dept, course=course_obj, teacher=teacher_obj,
+                    room=room_obj, timeslot=timeslot_obj, semester=semester,
+                    group_no=group_no, day_of_week=day, section=section
+                )
+                
+                # 2. Trigger your models.py clean() method validation
+                new_routine.full_clean()
+                
+                # 3. If no errors, save it!
+                new_routine.save()
+                messages.success(request, "Routine block assigned successfully!")
+                
+            except ValidationError as e:
+                # 4. Catch the conflict error and send it to the UI
+                error_msg = e.messages[0] if hasattr(e, 'messages') else str(e)
+                messages.error(request, error_msg)
+                
             return redirect('dept_admin_dashboard')
 
+    # ---------------------------------------------------------
     # FEATURE 4: ADVANCED ROUTINE SEARCH
+    # ---------------------------------------------------------
     routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
     
     search_day = request.GET.get('search_day', '')
@@ -318,7 +341,9 @@ def dept_admin_dashboard(request):
     if search_teacher:
         routines = routines.filter(teacher_id=search_teacher)
 
+    # ---------------------------------------------------------
     # FEATURE 5: CSV/EXCEL EXPORT
+    # ---------------------------------------------------------
     if request.GET.get('export_csv') == '1':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{dept.name}_Routine_Export.csv"'
@@ -335,7 +360,9 @@ def dept_admin_dashboard(request):
             ])
         return response
 
+    # ---------------------------------------------------------
     # Basic queries for dropdowns and lists
+    # ---------------------------------------------------------
     courses = Course.objects.filter(department=dept)
     teachers = Teacher.objects.filter(department=dept).order_by('name') 
     faculty_rooms = Room.objects.filter(faculty=parent_faculty).order_by('floor_no', 'room_number')
