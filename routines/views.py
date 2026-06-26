@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdminProfile, Teacher, Room, Timeslot, Course
+import csv
+from django.http import HttpResponse
 
 # ==========================================
 # PUBLIC & AUTHENTICATION VIEWS
@@ -201,7 +203,7 @@ def dept_admin_dashboard(request):
     parent_faculty = dept.faculty
     
     if request.method == 'POST':
-        # FEATURE 1: CREATE TEACHER (With strict unique ID checking)
+        # FEATURE 1: CREATE TEACHER
         if 'create_teacher' in request.POST:
             teacher_id = request.POST.get('teacher_id', '').strip()
             name = request.POST.get('name', '').strip()
@@ -209,9 +211,9 @@ def dept_admin_dashboard(request):
             password = request.POST.get('password', '').strip()
             
             if User.objects.filter(username=username).exists():
-                messages.error(request, f"Username '{username}' is already taken. Please choose another.")
+                messages.error(request, f"Username '{username}' is already taken.")
             elif Teacher.objects.filter(teacher_id=teacher_id).exists():
-                messages.error(request, f"Teacher ID '{teacher_id}' already exists in the system.")
+                messages.error(request, f"Teacher ID '{teacher_id}' already exists.")
             else:
                 new_user = User.objects.create_user(username=username, password=password)
                 Teacher.objects.create(user=new_user, name=name, department=dept, teacher_id=teacher_id)
@@ -224,7 +226,7 @@ def dept_admin_dashboard(request):
             title = request.POST.get('title', '').strip()
             
             if Course.objects.filter(course_code__iexact=code, department=dept).exists():
-                messages.error(request, f"Course '{code}' already exists in your department.")
+                messages.error(request, f"Course '{code}' already exists.")
             else:
                 Course.objects.create(course_code=code, title=title, department=dept)
                 messages.success(request, f"Course [{code}] successfully added.")
@@ -241,51 +243,67 @@ def dept_admin_dashboard(request):
             day = request.POST.get('day_of_week')
             section = request.POST.get('section', '').strip() or "None"
             
-            # Fetch objects with security filters (Ensuring they belong to the correct dept/faculty)
             course_obj = get_object_or_404(Course, id=course_id, department=dept)
             teacher_obj = get_object_or_404(Teacher, id=teacher_id_fk, department=dept)
             room_obj = get_object_or_404(Room, id=room_id, faculty=parent_faculty)
             timeslot_obj = get_object_or_404(Timeslot, id=timeslot_id)
             
             Routine.objects.create(
-                department=dept,
-                course=course_obj,
-                teacher=teacher_obj,
-                room=room_obj,
-                timeslot=timeslot_obj,
-                semester=semester,
-                group_no=group_no,
-                day_of_week=day,
-                section=section
+                department=dept, course=course_obj, teacher=teacher_obj,
+                room=room_obj, timeslot=timeslot_obj, semester=semester,
+                group_no=group_no, day_of_week=day, section=section
             )
             messages.success(request, "Routine block assigned successfully!")
             return redirect('dept_admin_dashboard')
 
-    # FEATURE 4: FETCH DATA WITH STRICT DEPARTMENT ISOLATION
-    course_query = request.GET.get('course_search', '').strip()
-    courses = Course.objects.filter(department=dept)
-    if course_query:
-        courses = courses.filter(title__icontains=course_query) | courses.filter(course_code__icontains=course_query)
+    # FEATURE 4: ADVANCED ROUTINE SEARCH
+    routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
+    
+    search_day = request.GET.get('search_day', '')
+    search_room = request.GET.get('search_room', '')
+    search_time = request.GET.get('search_time', '')
+    search_teacher = request.GET.get('search_teacher', '')
+    
+    if search_day:
+        routines = routines.filter(day_of_week=search_day)
+    if search_room:
+        routines = routines.filter(room_id=search_room)
+    if search_time:
+        routines = routines.filter(timeslot_id=search_time)
+    if search_teacher:
+        routines = routines.filter(teacher_id=search_teacher)
+
+    # FEATURE 5: CSV/EXCEL EXPORT
+    if request.GET.get('export_csv') == '1':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{dept.name}_Routine_Export.csv"'
         
-    # ONLY fetch teachers from THIS department
+        writer = csv.writer(response)
+        writer.writerow(['Day', 'Time', 'Course Code', 'Course Title', 'Teacher', 'Room', 'Semester', 'Group'])
+        
+        for r in routines:
+            writer.writerow([
+                r.day_of_week, 
+                f"{r.timeslot.start_time.strftime('%I:%M %p')} - {r.timeslot.end_time.strftime('%I:%M %p')}",
+                r.course.course_code, r.course.title, r.teacher.name, 
+                r.room.room_number, r.semester, r.group_no
+            ])
+        return response
+
+    # Basic queries for dropdowns and lists
+    courses = Course.objects.filter(department=dept)
     teachers = Teacher.objects.filter(department=dept).order_by('name') 
     faculty_rooms = Room.objects.filter(faculty=parent_faculty).order_by('floor_no', 'room_number')
-    routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
     timeslots = Timeslot.objects.all().order_by('start_time')
     days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     
     context = {
-        'dept_admin': dept_admin,
-        'dept': dept,
-        'routines': routines,
-        'faculty_rooms': faculty_rooms,
-        'courses': courses,
-        'teachers': teachers,
-        'timeslots': timeslots,
-        'days': days,
-        'course_search': course_query,
+        'dept_admin': dept_admin, 'dept': dept, 'routines': routines,
+        'faculty_rooms': faculty_rooms, 'courses': courses, 'teachers': teachers,
+        'timeslots': timeslots, 'days': days,
     }
     return render(request, 'routines/dept_admin.html', context)
+
 @login_required(login_url='login')
 def teacher_dashboard(request):
     if not hasattr(request.user, 'teacher'):
