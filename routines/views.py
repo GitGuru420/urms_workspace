@@ -96,97 +96,142 @@ def superuser_dashboard(request):
 # ==========================================
 @login_required(login_url='login')
 def faculty_admin_dashboard(request):
-    if not hasattr(request.user, 'facultyadminprofile'): 
-        return redirect('login')
-    
-    faculty_admin = request.user.facultyadminprofile
-    faculty = faculty_admin.faculty
-    
-    # Process POST Forms
+    # 1. Get Logged-in Faculty Admin Profile and their assigned Faculty
+    faculty_profile = get_object_or_404(FacultyAdminProfile, user=request.user)
+    current_faculty = faculty_profile.faculty  # This locks the scope (e.g., Engineering Faculty)
+
+    # 2. Handle Form Submissions (POST Requests) with Faculty Lockdown Security
     if request.method == 'POST':
-        # 1. Action: CREATE DEPARTMENT
-        if 'create_department' in request.POST:
-            dept_name = request.POST.get('dept_name', '').strip()
-            if not dept_name:
-                messages.error(request, "Department name cannot be empty.")
-            elif Department.objects.filter(name__iexact=dept_name).exists():
-                messages.error(request, f"Validation Failed: Department '{dept_name}' already exists.")
-            else:
-                Department.objects.create(name=dept_name, faculty=faculty)
-                messages.success(request, f"Success! Department '{dept_name}' registered under {faculty.name}.")
-                return redirect('faculty_admin_dashboard')
+        action = request.POST.get('action')
 
-        # 2. Action: CREATE DEPARTMENT ADMIN 
-        elif 'create_dept_admin' in request.POST:
-            dept_id = request.POST.get('department_id')
-            username = request.POST.get('username', '').strip()
-            password = request.POST.get('password', '').strip()
+        # Action A: Create Room (Faculty Locked)
+        if action == 'create_room':
+            room_number = request.POST.get('room_number')
+            capacity = request.POST.get('capacity')
+            is_online = request.POST.get('is_online') == 'on'
+            Room.objects.create(
+                room_number=room_number, 
+                capacity=capacity, 
+                is_online=is_online,
+                faculty=current_faculty
+            )
+            return redirect('faculty_admin_dashboard')
+
+        # Action B: Create Department (Automatically bind to this admin's faculty!)
+        elif action == 'create_department':
+            name = request.POST.get('name')
+            code = request.POST.get('code')
+            # SECURITY FIX: Auto assigning the current faculty so they can't create depts for others
+            Department.objects.create(name=name, code=code, faculty=current_faculty)
+            return redirect('faculty_admin_dashboard')
+
+        # Action C: Create Dept Admin Profile
+        elif action == 'create_dept_admin':
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            dept_id = request.POST.get('department')
             
-            if not dept_id or not username or not password:
-                messages.error(request, "All fields are required.")
-            elif User.objects.filter(username=username).exists():
-                messages.error(request, f"Username '{username}' already exists.")
-            else:
-                target_dept = get_object_or_404(Department, id=dept_id, faculty=faculty)
-                new_user = User.objects.create_user(username=username, password=password)
-                DeptAdminProfile.objects.create(user=new_user, department=target_dept)
-                messages.success(request, f"Success! Admin account created for {target_dept.name}.")
-                return redirect('faculty_admin_dashboard')
+            # Security Check: Ensure target dept belongs to this admin's faculty
+            dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
+            user = User.objects.create_user(username=username, password=password)
+            from .models import DeptAdminProfile
+            DeptAdminProfile.objects.create(user=user, department=dept)
+            return redirect('faculty_admin_dashboard')
 
-        # 🔥 NEW ACTION 3: CREATE SECURITY-SCOPED ROOM
-        elif 'create_room' in request.POST:
-            room_no = request.POST.get('room_number', '').strip()
-            floor = request.POST.get('floor_no', '').strip()
-            c_type = request.POST.get('class_type')
-            cap = request.POST.get('capacity')
+        # Action D: Create Course
+        elif action == 'create_course':
+            course_code = request.POST.get('course_code')
+            title = request.POST.get('title')
+            dept_id = request.POST.get('department')
             
-            if not room_no or not floor or not c_type or not cap:
-                messages.error(request, "All room spec fields are required.")
-            elif Room.objects.filter(room_number__iexact=room_no).exists():
-                messages.error(request, f"Room '{room_no}' already exists globally.")
-            else:
-                Room.objects.create(
-                    faculty=faculty, # Force injected to lock ownership profile
-                    room_number=room_no,
-                    floor_no=floor,
-                    class_type=c_type,
-                    capacity=cap
-                )
-                messages.success(request, f"Asset Logged! Room {room_no} registered to your faculty deck.")
-                return redirect('faculty_admin_dashboard')
+            # Security Check: Ensure target dept belongs to this admin's faculty
+            dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
+            Course.objects.create(course_code=course_code, title=title, department=dept)
+            return redirect('faculty_admin_dashboard')
 
-    # Fetch Data Scoped Strictly to this Faculty
-    departments = Department.objects.filter(faculty=faculty).prefetch_related('deptadminprofile_set__user')
-    rooms = Room.objects.filter(faculty=faculty).order_by('floor_no', 'room_number') # ✅ Isolated room deck
+        # Action E: Super Admin Class Assignment
+        elif action == 'assign_class':
+            dept_id = request.POST.get('department')
+            # Security Check: Double-checking ownership before committing to DB
+            dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
+            
+            teacher = get_object_or_404(Teacher, id=request.POST.get('teacher'), department__faculty=current_faculty)
+            course = get_object_or_404(Course, id=request.POST.get('course'), department__faculty=current_faculty)
+            room = get_object_or_404(Room, id=request.POST.get('room'))
+            timeslot = get_object_or_404(Timeslot, id=request.POST.get('timeslot'))
+            
+            Routine.objects.create(
+                department=dept,
+                teacher=teacher,
+                course=course,
+                room=room,
+                timeslot=timeslot,
+                day_of_week=request.POST.get('day_of_week'),
+                semester=request.POST.get('semester'),
+                group_no=request.POST.get('group_no')
+            )
+            return redirect('faculty_admin_dashboard')
+
+    # 3. GET Method: DATA ISOLATION LAYER (Locking Querysets to current faculty)
+    # Only pull departments belonging to this specific Faculty Admin
+    departments = Department.objects.filter(faculty=current_faculty).order_by('name')
     
-    # Filters logic for Routine Radar
-    selected_dept = request.GET.get('department', 'All')
-    selected_day = request.GET.get('day', 'All')
-    routines = Routine.objects.filter(department__faculty=faculty)
+    # Filter courses and teachers that only belong to this Faculty's departments
+    courses = Course.objects.filter(department__in=departments).order_by('course_code')
+    teachers = Teacher.objects.filter(department__in=departments).order_by('name')
     
-    if selected_dept != 'All': routines = routines.filter(department_id=selected_dept)
-    if selected_day != 'All': routines = routines.filter(day_of_week=selected_day)
+    # Rooms and Timeslots can remain globally accessible for scheduling availability
+    rooms = Room.objects.filter(faculty=current_faculty).order_by('room_number')
+    timeslots = Timeslot.objects.all().order_by('start_time')
+    days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+
+    # 4. Advanced Isolated Search Hub
+    search_dept = request.GET.get('search_dept')
+    search_day = request.GET.get('search_day')
+    search_room = request.GET.get('search_room')
+    search_time = request.GET.get('search_time')
+    search_teacher = request.GET.get('search_teacher')
+
+    master_routines = None  # Default hidden state
+
+    if any([search_dept, search_day, search_room, search_time, search_teacher]):
+        # BASE FILTER CRITICAL SAFEGUARD: Only search routines within this faculty's departments
+        master_routines = Routine.objects.filter(department__in=departments).select_related(
+            'course', 'teacher', 'room', 'timeslot', 'department'
+        )
         
-    routines = routines.select_related('course', 'teacher', 'room', 'department', 'timeslot').order_by('day_of_week', 'timeslot__start_time')
-    
-    stats = {
-        'total_depts': departments.count(),
-        'total_rooms': rooms.count(), # Dynamic room tracking metric
-        'active_classes': routines.count(),
-    }
-    
-    days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    
+        if search_dept:
+            master_routines = master_routines.filter(department_id=search_dept)
+        if search_day:
+            master_routines = master_routines.filter(day_of_week=search_day)
+        if search_room:
+            master_routines = master_routines.filter(room_id=search_room)
+        if search_time:
+            master_routines = master_routines.filter(timeslot_id=search_time)
+        if search_teacher:
+            master_routines = master_routines.filter(teacher_id=search_teacher)
+
+    # 5. CSV Export Engine (Isolated Data Output Only)
+    if request.GET.get('export_csv') == '1' and master_routines is not None:
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{current_faculty.name}_Routine_Grid.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Department', 'Day', 'Time', 'Course Code', 'Course Title', 'Teacher', 'Room', 'Semester', 'Group'])
+        
+        for r in master_routines:
+            writer.writerow([r.department.name, r.day_of_week, f"{r.timeslot.start_time}", r.course.course_code, r.course.title, r.teacher.name, r.room.room_number, r.semester, r.group_no])
+        return response
+
     context = {
-        'faculty_admin': faculty_admin,
-        'faculty': faculty,
+        'faculty_profile': faculty_profile,
+        'current_faculty': current_faculty,
         'departments': departments,
         'rooms': rooms,
-        'routines': routines,
-        'selected_dept': selected_dept,
-        'selected_day': selected_day,
-        'stats': stats,
+        'teachers': teachers,
+        'courses': courses,
+        'timeslots': timeslots,
         'days': days,
+        'master_routines': master_routines,
     }
     return render(request, 'routines/faculty_admin.html', context)
 
