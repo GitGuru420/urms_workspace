@@ -292,7 +292,7 @@ def teacher_dashboard(request):
         return redirect('login')
     teacher = request.user.teacher
     routines = Routine.objects.filter(teacher=teacher).select_related('course', 'room', 'timeslot', 'department')
-    return render(request, 'routines/teacher.html', {'teacher': teacher, 'routines': routines})
+    return render(request, 'routines/teacher_dashboard.html', {'teacher': teacher, 'routines': routines})
 
 @login_required(login_url='login')
 def delete_routine(request, routine_id):
