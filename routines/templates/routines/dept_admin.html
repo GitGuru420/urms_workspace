@@ -35,7 +35,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button onclick="toggleSection('teacher-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Create Teacher</button>
         <button onclick="toggleSection('course-form')" class="bg-white border-2 border-blue-600 text-blue-700 hover:bg-blue-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Create Course</button>
-        <button onclick="toggleSection('routine-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Create Class Routine</button>
+        <button onclick="toggleSection('routine-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Assign Class</button>
     </div>
 
     <div class="space-y-4">
@@ -43,46 +43,115 @@
         <div id="teacher-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-emerald-600">
             <h2 class="text-xs font-black uppercase mb-3">Register New Teacher</h2>
             <form method="POST" class="space-y-3">
-                {% csrf_token %} <input type="hidden" name="create_teacher" value="1">
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="text" name="teacher_id" required placeholder="T-101" class="col-span-1 bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                    <input type="text" name="name" required placeholder="Full Name" class="col-span-2 bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="username" required placeholder="Login Username" class="bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                    <input type="password" name="password" required placeholder="Password" class="bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-xs">Save</button>
-            </form>
+                    {% csrf_token %}
+                    <input type="hidden" name="create_teacher" value="1">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Teacher ID</label>
+                            <input type="text" name="teacher_id" required placeholder="T-1001" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Full Name</label>
+                            <input type="text" name="name" required placeholder="Tahsin Alam" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Username</label>
+                            <input type="text" name="username" required placeholder="tahsin_123" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Password</label>
+                            <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-lg">Save Teacher</button>
+                </form>
         </div>
 
         <div id="course-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-blue-600">
             <h2 class="text-xs font-black uppercase mb-3">Add New Course</h2>
-            <form method="POST" class="grid grid-cols-4 gap-2">
-                {% csrf_token %} <input type="hidden" name="create_course" value="1">
-                <input type="text" name="course_code" required placeholder="Code" class="col-span-1 bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs uppercase">
-                <input type="text" name="title" required placeholder="Course Title" class="col-span-2 bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <button type="submit" class="col-span-1 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg text-xs">Save</button>
-            </form>
+            <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="create_course" value="1">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Code</label>
+                            <input type="text" name="course_code" required placeholder="CSE-1111" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Title</label>
+                            <input type="text" name="title" required placeholder="Data Structure" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-lg text-lg">Save Course</button>
+                </form>
         </div>
 
         <div id="routine-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-indigo-600">
             <h2 class="text-xs font-black uppercase mb-3">Assign Routine Block</h2>
-            <form method="POST" class="space-y-2.5 text-xs">
-                {% csrf_token %} <input type="hidden" name="assign_routine" value="1">
-                <div class="grid grid-cols-2 gap-2">
-                    <select name="course_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2"><option value="" disabled selected>Course</option>{% for c in courses %} <option value="{{ c.id }}">{{ c.course_code }}</option> {% endfor %}</select>
-                    <select name="teacher_id_fk" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2"><option value="" disabled selected>Teacher</option>{% for t in teachers %} <option value="{{ t.id }}">{{ t.name }}</option> {% endfor %}</select>
-                    <select name="room_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2"><option value="" disabled selected>Room</option>{% for r in faculty_rooms %} <option value="{{ r.id }}">{{ r.room_number }}</option> {% endfor %}</select>
-                    <select name="timeslot_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2"><option value="" disabled selected>Time</option>{% for slot in timeslots %} <option value="{{ slot.id }}">{{ slot.start_time|time:"h:i A" }}</option> {% endfor %}</select>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <select name="day_of_week" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2">{% for d in days %} <option value="{{ d }}">{{ d|slice:":3" }}</option> {% endfor %}</select>
-                    <input type="number" name="semester" required placeholder="Sem" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-center">
-                    <input type="text" name="group_no" required placeholder="Grp" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-center">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2 rounded-lg">Assign to Routine</button>
-            </form>
+            <form method="POST" class="space-y-4 text-xs">
+    {% csrf_token %} 
+    <input type="hidden" name="assign_routine" value="1">
+    
+    <div class="grid grid-cols-2 gap-3">
+        <div>
+            <label for="course_id" class="block text-[10px] font-bold text-gray-500 mb-1">Course</label>
+            <select name="course_id" id="course_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                <option value="" disabled selected>Select Course</option>
+                {% for c in courses %} <option value="{{ c.id }}">{{ c.course_code }} - {{ c.title }}</option> {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="teacher_id_fk" class="block text-[10px] font-bold text-gray-500 mb-1">Teacher</label>
+            <select name="teacher_id_fk" id="teacher_id_fk" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                <option value="" disabled selected>Select Teacher</option>
+                {% for t in teachers %} <option value="{{ t.id }}">{{ t.name }}</option> {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="room_id" class="block text-[10px] font-bold text-gray-500 mb-1">Room</label>
+            <select name="room_id" id="room_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                <option value="" disabled selected>Select Room</option>
+                {% for r in faculty_rooms %} <option value="{{ r.id }}">Room: {{ r.room_number }} - Floor: {{ r.floor_no }}</option> {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="timeslot_id" class="block text-[10px] font-bold text-gray-500 mb-1">Time Slot</label>
+            <select name="timeslot_id" id="timeslot_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                <option value="" disabled selected>Select Time</option>
+                {% for slot in timeslots %} <option value="{{ slot.id }}">{{ slot.start_time|time:"h:i A" }}</option> {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mt-2">
+        <div>
+            <label for="day_of_week" class="block text-[10px] font-bold text-gray-500 mb-1">Day</label>
+            <select name="day_of_week" id="day_of_week" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                <option value="" disabled selected>Day</option>
+                {% for d in days %} <option value="{{ d }}">{{ d }}</option> {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="semester" class="block text-[10px] font-bold text-gray-500 mb-1">Semester</label>
+            <input type="number" name="semester" id="semester" required placeholder="Ex: 8" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+        </div>
+
+        <div>
+            <label for="group_no" class="block text-[10px] font-bold text-gray-500 mb-1">Group</label>
+            <input type="text" name="group_no" id="group_no" required placeholder="Ex: A" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+        </div>
+    </div>
+
+    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-lg">
+        Assign to Routine
+    </button>
+</form>
         </div>
     </div>
 
@@ -91,8 +160,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <div class="space-y-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm">
-                <h2 class="text-sm font-black uppercase mb-3">👨‍🏫 Department Teachers</h2>
+            <div class="bg-white p-5 rounded-2xl shadow-lg">
+                <h2 class="text-sm font-black uppercase mb-3 text-center">Department Teachers</h2>
                 <div class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
                     {% for teacher in teachers %}
                         <div class="bg-slate-50 border border-gray-200 rounded-lg p-2 flex justify-between items-center">
@@ -103,8 +172,8 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm">
-                <button onclick="toggleSection('course-list')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-black py-2 rounded-lg text-xs uppercase mb-2">👁️ See Course List</button>
+            <div class="bg-white p-5 rounded-2xl shadow-lg">
+                <button onclick="toggleSection('course-list')" class="w-full bg-slate-300 hover:bg-slate-200 text-slate-800 font-black py-2 rounded-lg text-xs uppercase mb-2">See Course List</button>
                 <div id="course-list" class="hidden mt-3 flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
                     {% for course in courses %}
                         <div class="p-2 border border-gray-100 rounded-xl bg-slate-50 flex items-center gap-2">
@@ -116,8 +185,8 @@
             </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm">
-            <h2 class="text-sm font-black uppercase mb-3">🔍 Advanced Routine Search & Export</h2>
+        <div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-lg">
+            <h2 class="text-sm font-black uppercase mb-3 text-center">Advanced Routine Search & Export</h2>
             
             <form method="GET" class="bg-slate-50 p-4 rounded-xl border border-gray-200 mb-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-3">
@@ -137,12 +206,17 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
                 {% for r in routines %}
                     <div class="p-3 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm">
-                        <div class="flex justify-between font-bold mb-1 text-slate-800">
-                            <span>{{ r.day_of_week|slice:":3" }} • {{ r.timeslot.start_time|time:"h:i A" }}</span>
-                            <span class="bg-indigo-100 text-indigo-800 px-1 rounded">R:{{ r.room.room_number }}</span>
+                        <div class="flex justify-between font-bold mb-2 text-slate-800">
+                            <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                            <span class="bg-indigo-100 text-indigo-800 px-1 rounded">Room: {{ r.room.room_number }} <br> Floor: {{ r.room.floor_no }}</span>
                         </div>
-                        <div class="font-black text-indigo-700 text-sm">{{ r.course.course_code }}</div>
-                        <div class="text-gray-600 font-medium mt-1">Prof: {{ r.teacher.name }} | Sem {{ r.semester }}</div>
+                        <div class="font-black text-indigo-700 text-sm">{{ r.course.course_code }}
+                            <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
+                        </div>
+                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] flex justify-between">
+                            <div class="text-gray-600 font-medium mt-1">{{ r.teacher.name }}</div>
+                             <div class="text-gray-600 font-medium mt-1">Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
+                        </div>
                     </div>
                 {% empty %}
                     <div class="col-span-full text-center py-6 text-gray-400 font-bold text-xs border-2 border-dashed border-gray-200 rounded-xl">No routines found for these filters.</div>
