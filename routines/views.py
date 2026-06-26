@@ -319,13 +319,45 @@ def delete_routine(request, routine_id):
     messages.success(request, "Routine block wiped successfully.")
     return redirect_based_on_role(request.user)
 
+# View Routine Without Login
 def view_routine(request):
-    departments = Department.objects.all()
-    selected_dept = request.GET.get('department')
-    selected_semester = request.GET.get('semester')
-    selected_group = request.GET.get('group_no')
-    routines = Routine.objects.all()
-    if selected_dept: routines = routines.filter(department_id=selected_dept)
-    if selected_semester: routines = routines.filter(semester=selected_semester)
-    if selected_group: routines = routines.filter(group_no=selected_group)
-    return render(request, 'routines/view_routine.html', {'departments': departments, 'routines': routines})
+    # 1. Backend theke dynamic days ar departments load kora
+    days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    departments = Department.objects.all().order_by('name')
+    
+    # 2. Get Form Inputs
+    day = request.GET.get('day', '').strip()
+    department_id = request.GET.get('department', '').strip()
+    semester = request.GET.get('semester', '').strip()
+    group_no = request.GET.get('group_no', '').strip()
+    
+    routines = None
+    search_triggered = False
+    
+    # 3. Validation: Sobgulo field match korlei shudhu search hobe (Tomar requirement)
+    if day and department_id and semester and group_no:
+        search_triggered = True
+        routines = Routine.objects.filter(
+            day_of_week=day,
+            department_id=department_id,
+            semester=semester,
+            group_no=group_no
+        ).select_related('course', 'teacher', 'room', 'timeslot')
+    
+    # Pack parameters to retain values after form submission
+    queries = {
+        'day': day,
+        'department': department_id,
+        'semester': semester,
+        'group_no': group_no
+    }
+    
+    context = {
+        'days': days,
+        'departments': departments,
+        'routines': routines,
+        'search_triggered': search_triggered,
+        'queries': queries
+    }
+    
+    return render(request, 'routines/view_routine.html', context)

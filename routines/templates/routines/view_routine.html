@@ -2,29 +2,36 @@
 
 {% block content %}
 <div class="space-y-8">
-    <div class="border-b border-gray-200 pb-4 flex justify-between items-center">
+    
+    <div class="border-b border-gray-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Search Class Routines</h1>
             <p class="text-sm text-gray-500">Select parameters to look up current course schedule blocks.</p>
         </div>
-        <a href="{% url 'login' %}" class="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-all">
-            ← Return to Workspace Portal
-        </a>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <a href="{% url 'landing_page' %}" class="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                🏠 Go to Homepage
+            </a>
+            <a href="{% url 'login' %}" class="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-all flex items-center">
+                Portal Workspace →
+            </a>
+        </div>
     </div>
 
     <form method="GET" action="{% url 'view_routine' %}" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        
         <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Day Name</label>
-            <select name="day" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">-- Choose Day --</option>
-                {% for d in days %}
-                    <option value="{{ d }}" {% if queries.day == d %}selected{% endif %}>{{ d }}</option>
-                {% endfor %}
-            </select>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Day Name <span class="text-red-500">*</span></label>
+    <select name="day" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <option value="">-- Choose Day --</option>
+        {% for d in days %}
+            <option value="{{ d }}" {% if queries.day == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+    </select>
         </div>
 
         <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Department</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Department <span class="text-red-500">*</span></label>
             <select name="department" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">-- Choose Department --</option>
                 {% for dept in departments %}
@@ -34,17 +41,26 @@
         </div>
 
         <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Semester No.</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Semester No. <span class="text-red-500">*</span></label>
             <select name="semester" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">-- Choose Semester --</option>
-                {% for i in "12345678"|make_list %}
-                    <option value="{{ i }}" {% if queries.semester == i %}selected{% endif %}>Semester {{ i }}</option>
-                {% endfor %}
+                <option value="1" {% if queries.semester == "1" %}selected{% endif %}>Semester 1</option>
+                <option value="2" {% if queries.semester == "2" %}selected{% endif %}>Semester 2</option>
+                <option value="3" {% if queries.semester == "3" %}selected{% endif %}>Semester 3</option>
+                <option value="4" {% if queries.semester == "4" %}selected{% endif %}>Semester 4</option>
+                <option value="5" {% if queries.semester == "5" %}selected{% endif %}>Semester 5</option>
+                <option value="6" {% if queries.semester == "6" %}selected{% endif %}>Semester 6</option>
+                <option value="7" {% if queries.semester == "7" %}selected{% endif %}>Semester 7</option>
+                <option value="8" {% if queries.semester == "8" %}selected{% endif %}>Semester 8</option>
+                <option value="9" {% if queries.semester == "9" %}selected{% endif %}>Semester 9</option>
+                <option value="10" {% if queries.semester == "10" %}selected{% endif %}>Semester 10</option>
+                <option value="11" {% if queries.semester == "11" %}selected{% endif %}>Semester 11</option>
+                <option value="12" {% if queries.semester == "12" %}selected{% endif %}>Semester 12</option>
             </select>
         </div>
 
         <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Group Identifier</label>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Group Identifier <span class="text-red-500">*</span></label>
             <select name="group_no" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">-- Choose Group --</option>
                 <option value="A" {% if queries.group_no == "A" %}selected{% endif %}>Group A</option>
