@@ -306,11 +306,70 @@ def dept_admin_dashboard(request):
 
 @login_required(login_url='login')
 def teacher_dashboard(request):
-    if not hasattr(request.user, 'teacher'):
-        return redirect('login')
-    teacher = request.user.teacher
-    routines = Routine.objects.filter(teacher=teacher).select_related('course', 'room', 'timeslot', 'department')
-    return render(request, 'routines/teacher_dashboard.html', {'teacher': teacher, 'routines': routines})
+    # 1. Get Logged-in Teacher Info
+    teacher = get_object_or_404(Teacher, user=request.user)
+    
+    # We kept this because your UI still shows the "Weekly Commitment" number at the top right!
+    total_weekly_classes = Routine.objects.filter(teacher=teacher).count()
+
+    # -------------------------------------------------------------
+    # LOGIC: Advanced Search Parameters
+    # -------------------------------------------------------------
+    days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    faculty_rooms = Room.objects.all().order_by('room_number')
+    timeslots = Timeslot.objects.all().order_by('start_time')
+
+    search_day = request.GET.get('search_day')
+    search_room = request.GET.get('search_room')
+    search_time = request.GET.get('search_time')
+
+    # Base query for Global Master Routine
+    master_routines = Routine.objects.filter(teacher=teacher).select_related('course', 'room', 'timeslot', 'department')
+
+    # Apply filters dynamically if user searched for anything
+    if search_day:
+        master_routines = master_routines.filter(day_of_week=search_day)
+    if search_room:
+        master_routines = master_routines.filter(room_id=search_room)
+    if search_time:
+        master_routines = master_routines.filter(timeslot_id=search_time)
+
+    # -------------------------------------------------------------
+    # LOGIC: CSV Export Handler
+    # -------------------------------------------------------------
+    if request.GET.get('export_csv') == '1':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{teacher.name}_Routine_Export.csv"'
+        
+        writer = csv.writer(response)
+        # Write CSV Headers (Removed Teacher Column since it's just for this teacher)
+        writer.writerow(['Day', 'Time', 'Course Code', 'Course Title', 'Room', 'Semester', 'Group'])
+        
+        # Write Data Rows
+        for r in master_routines:
+            writer.writerow([
+                r.day_of_week,
+                f"{r.timeslot.start_time.strftime('%I:%M %p')} - {r.timeslot.end_time.strftime('%I:%M %p')}",
+                r.course.course_code,
+                r.course.title,
+                f"Room {r.room.room_number}" if not r.room.is_online else "Online",
+                r.semester,
+                r.group_no
+            ])
+        return response
+
+    context = {
+        'teacher': teacher,
+        'total_weekly_classes': total_weekly_classes,
+        
+        # Context Variables for Advanced Search (Teacher dropped)
+        'days': days,
+        'faculty_rooms': faculty_rooms,
+        'timeslots': timeslots,
+        'master_routines': master_routines,
+    }
+    
+    return render(request, 'routines/teacher_dashboard.html', context)
 
 @login_required(login_url='login')
 def delete_routine(request, routine_id):
@@ -319,7 +378,7 @@ def delete_routine(request, routine_id):
     messages.success(request, "Routine block wiped successfully.")
     return redirect_based_on_role(request.user)
 
-# View Routine Without Login
+# View Routine Without
 def view_routine(request):
     # 1. Backend theke dynamic days ar departments load kora
     days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
