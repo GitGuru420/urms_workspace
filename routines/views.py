@@ -374,21 +374,25 @@ def dept_admin_dashboard(request):
     # ---------------------------------------------------------
     # FEATURE 4: ADVANCED ROUTINE SEARCH
     # ---------------------------------------------------------
-    routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
-    
-    search_day = request.GET.get('search_day', '')
-    search_room = request.GET.get('search_room', '')
-    search_time = request.GET.get('search_time', '')
-    search_teacher = request.GET.get('search_teacher', '')
-    
-    if search_day:
-        routines = routines.filter(day_of_week=search_day)
-    if search_room:
-        routines = routines.filter(room_id=search_room)
-    if search_time:
-        routines = routines.filter(timeslot_id=search_time)
-    if search_teacher:
-        routines = routines.filter(teacher_id=search_teacher)
+    routines = None 
+
+    if 'search_day' in request.GET: 
+        
+        routines = Routine.objects.filter(department=dept).select_related('course', 'teacher', 'room', 'timeslot')
+        
+        search_day = request.GET.get('search_day')
+        search_room = request.GET.get('search_room')
+        search_time = request.GET.get('search_time')
+        search_teacher = request.GET.get('search_teacher')
+        
+        if search_day:
+            routines = routines.filter(day_of_week=search_day)
+        if search_room:
+            routines = routines.filter(room_id=search_room)
+        if search_time:
+            routines = routines.filter(timeslot_id=search_time)
+        if search_teacher:
+            routines = routines.filter(teacher_id=search_teacher)
 
     # ---------------------------------------------------------
     # FEATURE 5: CSV/EXCEL EXPORT
