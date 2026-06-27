@@ -14,24 +14,29 @@
             {% csrf_token %}
             
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Username / Identity String</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Username / User ID</label>
                 <input type="text" name="username" required autocomplete="username"
                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all placeholder:text-gray-400"
                        placeholder="e.g., admin_cse or teacher_id">
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Security Account Password</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Account Password</label>
                 <input type="password" name="password" required autocomplete="current-password"
                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all placeholder:text-gray-400"
                        placeholder="••••••••">
             </div>
 
-            <div class="pt-2">
+            <div class="pt-4 space-y-3">
                 <button type="submit" 
                         class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.99]">
-                    Authenticate & Access Workspace
+                    Sign-In
                 </button>
+                
+                <a href="{% url 'landing_page' %}" 
+                   class="group block relative bg-gray-100 p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 overflow-hidden text-sm font-extrabold text-slate-900 text-center uppercase tracking-wider">
+                    Homepage
+                </a>
             </div>
         </form>
 
