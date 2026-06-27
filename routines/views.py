@@ -108,22 +108,39 @@ def faculty_admin_dashboard(request):
         # Action A: Create Room (Faculty Locked)
         if action == 'create_room':
             room_number = request.POST.get('room_number')
+            floor_no = request.POST.get('floor_no')
             capacity = request.POST.get('capacity')
+            class_type = request.POST.get('class_type')
             is_online = request.POST.get('is_online') == 'on'
-            Room.objects.create(
-                room_number=room_number, 
-                capacity=capacity, 
-                is_online=is_online,
-                faculty=current_faculty
-            )
+            
+            # SECURITY & LOGIC CHECK: Prevent duplicate room on the same floor
+            if Room.objects.filter(room_number=room_number, floor_no=floor_no, faculty=current_faculty).exists():
+                messages.error(request, f"Error: Room {room_number} already exists on {floor_no}!")
+            else:
+                Room.objects.create(
+                    room_number=room_number, 
+                    floor_no=floor_no,
+                    capacity=capacity, 
+                    class_type=class_type,
+                    is_online=is_online,
+                    faculty=current_faculty
+                )
+                messages.success(request, f"Success: Room {room_number} created successfully on {floor_no}!")
+                
             return redirect('faculty_admin_dashboard')
 
         # Action B: Create Department (Automatically bind to this admin's faculty!)
         elif action == 'create_department':
             name = request.POST.get('name')
-            code = request.POST.get('code')
-            # SECURITY FIX: Auto assigning the current faculty so they can't create depts for others
-            Department.objects.create(name=name, code=code, faculty=current_faculty)
+            if Department.objects.filter(name__iexact=name, faculty=current_faculty).exists():
+                messages.error(request, f"Error: Department '{name}' already exists!")
+            else:
+                Department.objects.create(
+                    name=name, 
+                    faculty=current_faculty
+                )
+                messages.success(request, f"Success: Department {name} created successfully!")
+                
             return redirect('faculty_admin_dashboard')
 
         # Action C: Create Dept Admin Profile
@@ -132,11 +149,20 @@ def faculty_admin_dashboard(request):
             password = request.POST.get('password')
             dept_id = request.POST.get('department')
             
-            # Security Check: Ensure target dept belongs to this admin's faculty
-            dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
-            user = User.objects.create_user(username=username, password=password)
-            from .models import DeptAdminProfile
-            DeptAdminProfile.objects.create(user=user, department=dept)
+            # Security Check 1: Prevent IntegrityError for duplicate username
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f"Error: Username '{username}' is already taken! Please try a different one.")
+            else:
+                # Security Check 2: Ensure target dept belongs to this admin's faculty
+                dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
+                
+                # Create the user and profile
+                user = User.objects.create_user(username=username, password=password)
+                from .models import DeptAdminProfile
+                DeptAdminProfile.objects.create(user=user, department=dept)
+                
+                messages.success(request, f"Success: Department Admin '{username}' created successfully!")
+                
             return redirect('faculty_admin_dashboard')
 
         # Action D: Create Course
@@ -145,9 +171,16 @@ def faculty_admin_dashboard(request):
             title = request.POST.get('title')
             dept_id = request.POST.get('department')
             
-            # Security Check: Ensure target dept belongs to this admin's faculty
+            # Security Check 1: Ensure target dept belongs to this admin's faculty
             dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
-            Course.objects.create(course_code=course_code, title=title, department=dept)
+            
+            # Security Check 2: Prevent IntegrityError for duplicate course code
+            if Course.objects.filter(course_code=course_code).exists():
+                messages.error(request, f"Error: Course code '{course_code}' already exists! Please use a different code.")
+            else:
+                Course.objects.create(course_code=course_code, title=title, department=dept)
+                messages.success(request, f"Success: Course '{course_code} - {title}' created successfully!")
+                
             return redirect('faculty_admin_dashboard')
 
         # Action E: Super Admin Class Assignment
@@ -161,16 +194,33 @@ def faculty_admin_dashboard(request):
             room = get_object_or_404(Room, id=request.POST.get('room'))
             timeslot = get_object_or_404(Timeslot, id=request.POST.get('timeslot'))
             
-            Routine.objects.create(
-                department=dept,
-                teacher=teacher,
-                course=course,
-                room=room,
-                timeslot=timeslot,
-                day_of_week=request.POST.get('day_of_week'),
-                semester=request.POST.get('semester'),
-                group_no=request.POST.get('group_no')
-            )
+            # Error Handling Block
+            from django.core.exceptions import ValidationError
+            from django.db import IntegrityError
+            
+            try:
+                new_routine = Routine(
+                    department=dept,
+                    teacher=teacher,
+                    course=course,
+                    room=room,
+                    timeslot=timeslot,
+                    day_of_week=request.POST.get('day_of_week'),
+                    semester=request.POST.get('semester'),
+                    group_no=request.POST.get('group_no')
+                )
+                new_routine.full_clean() 
+                new_routine.save() 
+                
+                messages.success(request, f"Success: Routine assigned successfully for {course.course_code}!")
+                
+            except ValidationError as e:
+                for err in e.messages:
+                    messages.error(request, f"Validation Error: {err}")
+                    
+            except IntegrityError:
+                messages.error(request, "Database Error: A scheduling conflict occurred. Please check the room or timeslot.")
+
             return redirect('faculty_admin_dashboard')
 
     # 3. GET Method: DATA ISOLATION LAYER (Locking Querysets to current faculty)
@@ -187,30 +237,29 @@ def faculty_admin_dashboard(request):
     days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
     # 4. Advanced Isolated Search Hub
+    master_routines = None
+    if 'search_dept' in request.GET:
+        master_routines = Routine.objects.filter(department__in=departments).select_related(
+            'course', 'teacher', 'room', 'timeslot', 'department'
+        )
     search_dept = request.GET.get('search_dept')
     search_day = request.GET.get('search_day')
     search_room = request.GET.get('search_room')
     search_time = request.GET.get('search_time')
     search_teacher = request.GET.get('search_teacher')
 
-    master_routines = None  # Default hidden state
-
-    if any([search_dept, search_day, search_room, search_time, search_teacher]):
-        # BASE FILTER CRITICAL SAFEGUARD: Only search routines within this faculty's departments
-        master_routines = Routine.objects.filter(department__in=departments).select_related(
-            'course', 'teacher', 'room', 'timeslot', 'department'
-        )
-        
-        if search_dept:
-            master_routines = master_routines.filter(department_id=search_dept)
-        if search_day:
-            master_routines = master_routines.filter(day_of_week=search_day)
-        if search_room:
-            master_routines = master_routines.filter(room_id=search_room)
-        if search_time:
-            master_routines = master_routines.filter(timeslot_id=search_time)
-        if search_teacher:
-            master_routines = master_routines.filter(teacher_id=search_teacher)
+    # BASE FILTER CRITICAL SAFEGUARD: By default, fetch ALL routines within this faculty's departments
+    
+    if search_dept:
+        master_routines = master_routines.filter(department_id=search_dept)
+    if search_day:
+        master_routines = master_routines.filter(day_of_week=search_day)
+    if search_room:
+        master_routines = master_routines.filter(room_id=search_room)
+    if search_time:
+        master_routines = master_routines.filter(timeslot_id=search_time)
+    if search_teacher:
+        master_routines = master_routines.filter(teacher_id=search_teacher)
 
     # 5. CSV Export Engine (Isolated Data Output Only)
     if request.GET.get('export_csv') == '1' and master_routines is not None:

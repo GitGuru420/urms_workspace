@@ -4,17 +4,55 @@
 <div class="space-y-8">
     
     <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-700 tracking-wider">Faculty Master Control Engine</span>
-        <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">Secure Sign-Out</a>
+        <a href="{% url 'faculty_admin_dashboard' %}" class="text-xs font-bold text-slate-700 tracking-wider hover:text-red-700 transition-colors cursor-pointer">
+        URMS FACULTY ADMINISTRATOR CONSOLE
+        </a>
+        <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wide transition-all">Sign-Out</a>
     </div>
 
-    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Super Administrator Level</span>
-            <h1 class="text-3xl font-black tracking-tight">Welcome, {{ faculty_profile.user.username }}</h1>
-            <p class="text-xs text-slate-400 mt-1">Centralized dashboard across all Department faculties.</p>
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-xl text-xs font-bold {% if message.tags == 'success' %} bg-emerald-50 text-emerald-700 {% else %} bg-red-50 text-red-700 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Faculty Administrator Level</span>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight mt-1">Welcome, <br> {{ current_faculty.name }}</h1>
+        <p class="text-xs text-slate-400 mt-1">Centralized management dashboard for your faculty.</p>
+    </div>
+
+    <div class="flex items-center gap-3 w-full lg:w-auto">
+        <div class="bg-slate-800 border border-slate-700 px-5 py-3 rounded-xl flex items-center gap-4 flex-1 lg:flex-none hover:bg-slate-750 transition-colors">
+            <div class="bg-indigo-500/20 p-2.5 rounded-lg text-indigo-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Departments</p>
+                <p class="text-2xl font-black text-white leading-none mt-1">{{ departments.count }}</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700 px-5 py-3 rounded-xl flex items-center gap-4 flex-1 lg:flex-none hover:bg-slate-750 transition-colors">
+            <div class="bg-emerald-500/20 p-2.5 rounded-lg text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Rooms</p>
+                <p class="text-2xl font-black text-white leading-none mt-1">{{ rooms.count }}</p>
+            </div>
         </div>
     </div>
+</div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <button onclick="togglePanel('panel-view-rooms')" class="bg-white border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-700 font-bold py-3 px-2 rounded-xl text-xs uppercase tracking-wide transition-all shadow-sm">View All Rooms</button>
@@ -28,12 +66,18 @@
     <div id="action-panels-container">
         
         <div id="panel-view-rooms" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">🚪 Central System Infrastructure Classrooms</h2>
+            <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Our Classrooms</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {% for r in rooms %}
-                    <div class="p-3 border border-gray-200 rounded-lg text-center {% if r.is_online %}bg-emerald-50 border-emerald-200{% else %}bg-slate-50{% endif %}">
-                        <div class="font-black text-sm text-slate-800">Room {{ r.room_number }}</div>
-                        <div class="text-[10px] text-gray-400 uppercase mt-1 font-semibold">Capacity: {{ r.capacity }}</div>
+                    <div class="p-3 border border-gray-200 rounded-lg {% if r.is_online %}bg-emerald-50 border-emerald-200{% else %}bg-slate-50{% endif %}">
+                        <div class="h-full flex items-center justify-center">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="font-black text-sm text-slate-800">R: {{ r.room_number }}</div>
+                                <div class="font-black text-sm text-slate-800">F: {{ r.floor_no }}</div>
+                                <div class="text-[10px] text-gray-400 font-semibold">Capacity: {{ r.capacity }}</div>
+                                <div class="text-[10px] text-gray-400 font-semibold">Class: {{ r.class_type }}</div>
+                            </div>
+                        </div>
                     </div>
                 {% empty %}
                     <div class="col-span-full text-center py-6 text-xs text-gray-400 font-bold">No global rooms created yet.</div>
@@ -42,42 +86,50 @@
         </div>
 
         <div id="panel-create-room" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
-            <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Create Resource Room Asset</h2>
-            <form method="POST" action="" class="space-y-4">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="create_room">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Room Number *</label>
-                        <input type="text" name="room_number" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Seating Capacity *</label>
-                        <input type="number" name="capacity" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Save Global Room</button>
-            </form>
+    <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Create Resource Room Asset</h2>
+    <form method="POST" action="" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_room">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Room Number *</label>
+                <input type="text" name="room_number" required placeholder="e.g. 301" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Floor Number *</label>
+                <input type="text" name="floor_no" required placeholder="e.g. 3rd Floor" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Seating Capacity *</label>
+                <input type="number" name="capacity" required placeholder="e.g. 40" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Classroom Type *</label>
+                <select name="class_type" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
+                    <option value="">Select Type...</option>
+                    <option value="Theory">Theory Class</option>
+                    <option value="Lab">Computer/Practical Lab</option>
+                </select>
+            </div>
         </div>
+        <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Save Global Room</button>
+    </form>
+</div>
 
         <div id="panel-create-dept" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
-            <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Create Academic Department Unit</h2>
-            <form method="POST" action="" class="space-y-4">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="create_department">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div class="md:col-span-2">
-                        <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Department Name *</label>
-                        <input type="text" name="name" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Short Code Alias *</label>
-                        <input type="text" name="code" required placeholder="e.g. CSE" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Instantiate Department</button>
-            </form>
+    <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Create Academic Department Unit</h2>
+    <form method="POST" action="" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_department">
+        <div class="grid grid-cols-1 gap-4 text-sm">
+            <div>
+                <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Department Name *</label>
+                <input type="text" name="name" required placeholder="e.g. Computer Science and Engineering" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
         </div>
+        <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Instantiate Department</button>
+    </form>
+</div>
 
         <div id="panel-create-admin" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
             <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Provision Department Executive Administrator</h2>
