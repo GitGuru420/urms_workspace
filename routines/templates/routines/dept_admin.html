@@ -5,7 +5,7 @@
 
     <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl shadow-sm">
         <a href="{% url 'dept_admin_dashboard' %}" class="text-xs font-bold text-slate-200 tracking-wider hover:text-red-700 transition-colors cursor-pointer">
-        URMS DEPARTMENT ADMINISTRATOR CONSOLE
+            URMS DEPARTMENT ADMINISTRATOR CONSOLE
         </a>
         <a href="{% url 'logout' %}" class="bg-red-50 hover:bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-xs">Sign-Out</a>
     </div>
@@ -33,9 +33,9 @@
     
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button onclick="toggleSection('teacher-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Create Teacher</button>
-        <button onclick="toggleSection('course-form')" class="bg-white border-2 border-blue-600 text-blue-700 hover:bg-blue-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Create Course</button>
-        <button onclick="toggleSection('routine-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all">Assign Class</button>
+        <button onclick="toggleSection('teacher-form')" class="bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all cursor-pointer">Create Teacher</button>
+        <button onclick="toggleSection('course-form')" class="bg-white border-2 border-blue-600 text-blue-700 hover:bg-blue-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all cursor-pointer">Create Course</button>
+        <button onclick="openRoutineFormForNewAssign()" class="bg-white border-2 border-indigo-600 text-indigo-700 hover:bg-indigo-50 py-4 rounded-xl font-black uppercase text-xs shadow-sm transition-all cursor-pointer">Assign Class</button>
     </div>
 
     <div class="space-y-4">
@@ -43,115 +43,142 @@
         <div id="teacher-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-emerald-600">
             <h2 class="text-xs font-black uppercase mb-3">Register New Teacher</h2>
             <form method="POST" class="space-y-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="create_teacher" value="1">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="col-span-1">
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Teacher ID</label>
-                            <input type="text" name="teacher_id" required placeholder="T-1001" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
-                        <div class="col-span-1">
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Full Name</label>
-                            <input type="text" name="name" required placeholder="Tahsin Alam" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
+                {% csrf_token %}
+                <input type="hidden" name="create_teacher" value="1">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Teacher ID</label>
+                        <input type="text" name="teacher_id" required placeholder="T-1001" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Username</label>
-                            <input type="text" name="username" required placeholder="tahsin_123" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Password</label>
-                            <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
+                    <div class="col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Full Name</label>
+                        <input type="text" name="name" required placeholder="Tahsin Alam" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-lg">Save Teacher</button>
-                </form>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Username</label>
+                        <input type="text" name="username" required placeholder="tahsin_123" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Password</label>
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-lg cursor-pointer">Save Teacher</button>
+            </form>
         </div>
 
         <div id="course-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-blue-600">
             <h2 class="text-xs font-black uppercase mb-3">Add New Course</h2>
             <form method="POST" class="space-y-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="create_course" value="1">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="col-span-1">
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Code</label>
-                            <input type="text" name="course_code" required placeholder="CSE-1111" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
-                        <div class="col-span-1">
-                            <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Title</label>
-                            <input type="text" name="title" required placeholder="Data Structure" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                        </div>
+                {% csrf_token %}
+                <input type="hidden" name="create_course" value="1">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Code</label>
+                        <input type="text" name="course_code" required placeholder="CSE-1111" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-lg text-lg">Save Course</button>
-                </form>
+                    <div class="col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Course Title</label>
+                        <input type="text" name="title" required placeholder="Data Structure" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-lg text-lg cursor-pointer">Save Course</button>
+            </form>
         </div>
 
         <div id="routine-form" class="hidden bg-white p-5 rounded-2xl shadow-sm border-t-4 border-t-indigo-600">
-            <h2 class="text-xs font-black uppercase mb-3">Assign Routine Block</h2>
+            <h2 id="form-panel-title" class="text-xs font-black uppercase mb-3">Assign Routine Block</h2>
             <form method="POST" class="space-y-4 text-xs">
-    {% csrf_token %} 
-    <input type="hidden" name="assign_routine" value="1">
-    
-    <div class="grid grid-cols-2 gap-3">
-        <div>
-            <label for="course_id" class="block text-[10px] font-bold text-gray-500 mb-1">Course</label>
-            <select name="course_id" id="course_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <option value="" disabled selected>Select Course</option>
-                {% for c in courses %} <option value="{{ c.id }}">{{ c.course_code }} - {{ c.title }}</option> {% endfor %}
-            </select>
-        </div>
+                {% csrf_token %} 
+                <input type="hidden" name="routine_id" id="form-routine-id" value="">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="course_id" class="block text-[10px] font-bold text-gray-500 mb-1">Course</label>
+                        <select name="course_id" id="course_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="" disabled selected>Select Course</option>
+                            {% for c in courses %} <option value="{{ c.id }}">{{ c.course_code }} - {{ c.title }}</option> {% endfor %}
+                        </select>
+                    </div>
 
-        <div>
-            <label for="teacher_id_fk" class="block text-[10px] font-bold text-gray-500 mb-1">Teacher</label>
-            <select name="teacher_id_fk" id="teacher_id_fk" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <option value="" disabled selected>Select Teacher</option>
-                {% for t in teachers %} <option value="{{ t.id }}">{{ t.name }}</option> {% endfor %}
-            </select>
-        </div>
+                    <div>
+                        <label for="teacher_id_fk" class="block text-[10px] font-bold text-gray-500 mb-1">Teacher</label>
+                        <select name="teacher_id_fk" id="teacher_id_fk" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="" disabled selected>Select Teacher</option>
+                            {% for t in teachers %} <option value="{{ t.id }}">{{ t.name }}</option> {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-        <div>
-            <label for="room_id" class="block text-[10px] font-bold text-gray-500 mb-1">Room</label>
-            <select name="room_id" id="room_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <option value="" disabled selected>Select Room</option>
-                {% for r in faculty_rooms %} <option value="{{ r.id }}">Room: {{ r.room_number }} - Floor: {{ r.floor_no }}</option> {% endfor %}
-            </select>
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="form-class-type" class="block text-[10px] font-bold text-gray-500 mb-1">Class Type</label>
+                        <select name="class_type" id="form-class-type" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="Theory">Theory</option>
+                            <option value="Lab">Lab</option>
+                        </select>
+                    </div>
 
-        <div>
-            <label for="timeslot_id" class="block text-[10px] font-bold text-gray-500 mb-1">Time Slot</label>
-            <select name="timeslot_id" id="timeslot_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <option value="" disabled selected>Select Time</option>
-                {% for slot in timeslots %} <option value="{{ slot.id }}">{{ slot.start_time|time:"h:i A" }}</option> {% endfor %}
-            </select>
-        </div>
-    </div>
+                    <div>
+                        <label for="form-is-online" class="block text-[10px] font-bold text-gray-500 mb-1">Class Mode</label>
+                        <select name="is_online" id="form-is-online" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="false">Offline (On-Campus)</option>
+                            <option value="true">Online (Virtual)</option>
+                        </select>
+                    </div>
+                </div>
 
-    <div class="grid grid-cols-3 gap-3 mt-2">
-        <div>
-            <label for="day_of_week" class="block text-[10px] font-bold text-gray-500 mb-1">Day</label>
-            <select name="day_of_week" id="day_of_week" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-                <option value="" disabled selected>Day</option>
-                {% for d in days %} <option value="{{ d }}">{{ d }}</option> {% endfor %}
-            </select>
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div id="wrapper-section" class="hidden">
+                        <label for="form-section" class="block text-[10px] font-bold text-gray-500 mb-1">Lab Section</label>
+                        <input type="text" name="section" id="form-section" placeholder="Ex: A1, B2" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                    </div>
 
-        <div>
-            <label for="semester" class="block text-[10px] font-bold text-gray-500 mb-1">Semester</label>
-            <input type="number" name="semester" id="semester" required placeholder="Ex: 8" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-        </div>
+                    <div id="wrapper-room">
+                        <label for="room_id" class="block text-[10px] font-bold text-gray-500 mb-1">Room</label>
+                        <select name="room_id" id="room_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="" disabled selected>Select Room</option>
+                            {% for r in faculty_rooms %} <option value="{{ r.id }}">Room: {{ r.room_number }} - Floor: {{ r.floor_no }}</option> {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-        <div>
-            <label for="group_no" class="block text-[10px] font-bold text-gray-500 mb-1">Group</label>
-            <input type="text" name="group_no" id="group_no" required placeholder="Ex: A" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs">
-        </div>
-    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label for="day_of_week" class="block text-[10px] font-bold text-gray-500 mb-1">Day</label>
+                        <select name="day_of_week" id="day_of_week" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="" disabled selected>Day</option>
+                            {% for d in days %} <option value="{{ d }}">{{ d }}</option> {% endfor %}
+                        </select>
+                    </div>
 
-    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-lg text-lg">
-        Assign to Routine
-    </button>
-</form>
+                    <div>
+                        <label for="timeslot_id" class="block text-[10px] font-bold text-gray-500 mb-1">Time Slot</label>
+                        <select name="timeslot_id" id="timeslot_id" required class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                            <option value="" disabled selected>Select Time</option>
+                            {% for slot in timeslots %} <option value="{{ slot.id }}">{{ slot.start_time|time:"h:i A" }} - {{ slot.end_time|time:"h:i A" }}</option> {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="semester" class="block text-[10px] font-bold text-gray-500 mb-1">Semester</label>
+                            <input type="text" name="semester" id="semester" required placeholder="Ex: 8" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                        </div>
+
+                        <div>
+                            <label for="group_no" class="block text-[10px] font-bold text-gray-500 mb-1">Group</label>
+                            <input type="text" name="group_no" id="group_no" required placeholder="Ex: A" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs font-semibold">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" name="assign_routine" value="1" id="form-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider cursor-pointer transition-all shadow-sm">
+                    Assign to Routine
+                </button>
+            </form>
         </div>
     </div>
 
@@ -173,7 +200,7 @@
             </div>
 
             <div class="bg-white p-5 rounded-2xl shadow-lg">
-                <button onclick="toggleSection('course-list')" class="w-full bg-slate-300 hover:bg-slate-200 text-slate-800 font-black py-2 rounded-lg text-xs uppercase mb-2">See Course List</button>
+                <button onclick="toggleSection('course-list')" class="w-full bg-slate-300 hover:bg-slate-200 text-slate-800 font-black py-2 rounded-lg text-xs uppercase mb-2 cursor-pointer">See Course List</button>
                 <div id="course-list" class="hidden mt-3 flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
                     {% for course in courses %}
                         <div class="p-2 border border-gray-100 rounded-xl bg-slate-50 flex items-center gap-2">
@@ -196,8 +223,8 @@
                     <select name="search_teacher" class="bg-white border border-gray-300 rounded-lg p-2"><option value="">All Teachers</option>{% for t in teachers %} <option value="{{ t.id }}" {% if request.GET.search_teacher == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option> {% endfor %}</select>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-black py-2 rounded-lg text-xs">Search Routine</button>
-                    <button type="submit" name="export_csv" value="1" class="bg-green-600 hover:bg-green-700 text-white font-black py-2 px-4 rounded-lg text-xs flex items-center gap-1">
+                    <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-black py-2 rounded-lg text-xs cursor-pointer">Search Routine</button>
+                    <button type="submit" name="export_csv" value="1" class="bg-green-600 hover:bg-green-700 text-white font-black py-2 px-4 rounded-lg text-xs flex items-center gap-1 cursor-pointer">
                         ⬇️ Export CSV
                     </button>
                 </div>
@@ -205,21 +232,57 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2">
                 {% for r in routines %}
-                    <div class="p-3 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm">
-                        <div class="flex justify-between font-bold mb-2 text-slate-800">
-                            <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
-                            <span class="bg-indigo-100 text-indigo-800 px-1 rounded">Room: {{ r.room.room_number }} <br> Floor: {{ r.room.floor_no }}</span>
-                        </div>
-                        <div class="font-black text-indigo-700 text-sm">{{ r.course.course_code }}
+                    <div class="p-3 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between font-bold mb-2 text-slate-800 items-start">
+                                <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                                
+                                {% if r.is_online %}
+                                    <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-right text-[10px] font-black uppercase tracking-wide border border-emerald-200">
+                                        🌐 Online <br> <span class="text-[9px] text-emerald-600 font-bold">{{ r.class_type|upper }}</span>
+                                    </span>
+                                {% else %}
+                                    <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-right text-[10px] font-medium">
+                                        Room: <span class="font-bold">{{ r.room.room_number }}</span> <br> Floor: {{ r.room.floor_no }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="font-black text-indigo-700 text-sm flex justify-between items-center mb-1">
+                                <span>{{ r.course.course_code }}</span>
+                                {% if r.class_type == 'Lab' and r.section %}
+                                    <span class="bg-amber-100 text-amber-950 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wide border border-amber-200">SEC: {{ r.section }}</span>
+                                {% endif %}
+                            </div>
                             <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
                         </div>
-                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] flex justify-between">
-                            <div class="text-gray-600 font-medium mt-1">{{ r.teacher.name }}</div>
-                             <div class="text-gray-600 font-medium mt-1">Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
+
+                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] flex justify-between items-end">
+                            <div>
+                                <div class="text-gray-600 font-semibold mt-1">{{ r.teacher.name }}</div>
+                                <div class="text-gray-600 font-bold mt-1">Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
+                            </div>
+                            
+                            <button type="button" 
+                                    data-id="{{ r.id }}"
+                                    data-teacher="{{ r.teacher.id }}"
+                                    data-course="{{ r.course.id }}"
+                                    data-classtype="{{ r.class_type }}"
+                                    data-online="{% if r.is_online %}true{% else %}false{% endif %}"
+                                    data-day="{{ r.day_of_week }}"
+                                    data-timeslot="{{ r.timeslot.id }}"
+                                    data-semester="{{ r.semester }}"
+                                    data-group="{{ r.group_no }}"
+                                    data-section="{{ r.section|default:'' }}"
+                                    data-room="{{ r.room.id|default:'' }}"
+                                    onclick="populateRoutineEditForm(this)" 
+                                    class="text-[10px] bg-slate-200 hover:bg-indigo-600 hover:text-white text-gray-700 font-black px-2 py-0.5 rounded transition-all cursor-pointer">
+                                ✏️ Edit
+                            </button>
                         </div>
                     </div>
                 {% empty %}
-                    <div class="col-span-full text-center py-6 text-gray-400 font-bold text-xs border-2 border-dashed border-gray-200 rounded-xl">No routines found for these filters.</div>
+                    <div class="col-span-full text-center py-6 text-gray-400 font-bold text-xs border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">No routines found for these filters.</div>
                 {% endfor %}
             </div>
         </div>
@@ -227,16 +290,120 @@
 </div>
 
 <script>
+    // টগল ইঞ্জিন
     function toggleSection(sectionId) {
-        // If it's one of the top forms, close the others first (optional clean UX)
         if (['teacher-form', 'course-form', 'routine-form'].includes(sectionId)) {
             ['teacher-form', 'course-form', 'routine-form'].forEach(id => {
                 if(id !== sectionId) document.getElementById(id).classList.add('hidden');
             });
         }
-        
         const section = document.getElementById(sectionId);
         section.classList.toggle('hidden');
+    }
+
+    // 💡 ডাইনামিক ফর্ম ভ্যালিডেটর (অনলাইন/ল্যাব ইনপুট কন্ট্রোল)
+    function engineFormValidator() {
+        const classTypeSelect = document.getElementById("form-class-type");
+        const isOnlineSelect = document.getElementById("form-is-online");
+        const wrapperSection = document.getElementById("wrapper-section");
+        const wrapperRoom = document.getElementById("wrapper-room");
+        const roomSelect = document.getElementById("room_id");
+        const sectionInput = document.getElementById("form-section");
+
+        if (!classTypeSelect || !isOnlineSelect) return;
+
+        if (classTypeSelect.value === "Lab") {
+            wrapperSection.classList.remove("hidden");
+            sectionInput.setAttribute("required", "required");
+        } else {
+            wrapperSection.classList.add("hidden");
+            sectionInput.removeAttribute("required");
+            sectionInput.value = ""; 
+        }
+
+        if (isOnlineSelect.value === "true") {
+            wrapperRoom.classList.add("hidden");
+            roomSelect.removeAttribute("required");
+            roomSelect.value = ""; 
+        } else {
+            wrapperRoom.classList.remove("hidden");
+            roomSelect.setAttribute("required", "required");
+        }
+    }
+
+    // অন-চেঞ্জ লিসেনার্স যুক্ত করা
+    document.addEventListener("DOMContentLoaded", function () {
+        const classTypeSelect = document.getElementById("form-class-type");
+        const isOnlineSelect = document.getElementById("form-is-online");
+        if (classTypeSelect && isOnlineSelect) {
+            classTypeSelect.addEventListener("change", engineFormValidator);
+            isOnlineSelect.addEventListener("change", engineFormValidator);
+            engineFormValidator();
+        }
+    });
+
+    // 💡 নতুন অ্যাসাইন মোডে ফর্ম ওপেন করা ও ওল্ড ভ্যালু রিসেট করা
+    function openRoutineFormForNewAssign() {
+        // ফর্ম ওপেন করা এবং অন্যান্য ফর্মগুলো হাইড করা
+        toggleSection('routine-form');
+        
+        const formPanel = document.getElementById('routine-form');
+        if (!formPanel.classList.contains('hidden')) {
+            // উইজেট ও বাটন লেখা রিসেট
+            document.getElementById("form-panel-title").innerText = "Assign Routine Block";
+            document.getElementById("form-submit-btn").innerText = "Assign to Routine";
+            
+            // আইডি ও ফিল্ডস ক্লিন করা
+            document.getElementById("form-routine-id").value = "";
+            document.getElementById("course_id").value = "";
+            document.getElementById("teacher_id_fk").value = "";
+            document.getElementById("form-class-type").value = "Theory";
+            document.getElementById("form-is-online").value = "false";
+            document.getElementById("day_of_week").value = "";
+            document.getElementById("timeslot_id").value = "";
+            document.getElementById("semester").value = "";
+            document.getElementById("group_no").value = "";
+            document.getElementById("form-section").value = "";
+            document.getElementById("room_id").value = "";
+            
+            engineFormValidator();
+            formPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    // 💡 এডিট মোডে ফর্ম পপুলেট ও ওপেন করা
+    function populateRoutineEditForm(btn) {
+        try {
+            // ফর্ম অলরেডি হাইড থাকলে তা ভিজিবল করা
+            const formPanel = document.getElementById('routine-form');
+            if (formPanel) {
+                // বাকি সব ফর্ম হাইড করে শুধু এটা ওপেন রাখা
+                ['teacher-form', 'course-form'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                formPanel.classList.remove('hidden');
+            }
+            
+            // এডিট উইন্ডো নোটিফিকেশন হেডার
+            document.getElementById("form-panel-title").innerText = "Update Departmental Routine Instance";
+            document.getElementById("form-submit-btn").innerText = "Update Routine Allocation";
+            
+            // ডেটা ইনজেকশন
+            document.getElementById("form-routine-id").value = btn.getAttribute('data-id');
+            document.getElementById("course_id").value = btn.getAttribute('data-course');
+            document.getElementById("teacher_id_fk").value = btn.getAttribute('data-teacher');
+            document.getElementById("form-class-type").value = btn.getAttribute('data-classtype');
+            document.getElementById("form-is-online").value = btn.getAttribute('data-online');
+            document.getElementById("day_of_week").value = btn.getAttribute('data-day');
+            document.getElementById("timeslot_id").value = btn.getAttribute('data-timeslot');
+            document.getElementById("semester").value = btn.getAttribute('data-semester');
+            document.getElementById("group_no").value = btn.getAttribute('data-group');
+            document.getElementById("form-section").value = btn.getAttribute('data-section');
+            document.getElementById("room_id").value = btn.getAttribute('data-room');
+
+            engineFormValidator();
+            formPanel.scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            console.error("Error populating form:", error);
+        }
     }
 </script>
 {% endblock content %}

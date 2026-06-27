@@ -369,42 +369,67 @@ def dept_admin_dashboard(request):
         # FEATURE 3: ASSIGN ROUTINE (Updated with Error Handling)
         # ---------------------------------------------------------
         elif 'assign_routine' in request.POST:
-            course_id = request.POST.get('course_id')
-            teacher_id_fk = request.POST.get('teacher_id_fk')
-            room_id = request.POST.get('room_id')
-            timeslot_id = request.POST.get('timeslot_id')
-            semester = request.POST.get('semester')
-            group_no = request.POST.get('group_no')
-            day = request.POST.get('day_of_week')
-            section = request.POST.get('section', '').strip() or "None"
-            
-            course_obj = get_object_or_404(Course, id=course_id, department=dept)
-            teacher_obj = get_object_or_404(Teacher, id=teacher_id_fk, department=dept)
-            room_obj = get_object_or_404(Room, id=room_id, faculty=parent_faculty)
-            timeslot_obj = get_object_or_404(Timeslot, id=timeslot_id)
-            
-            try:
-                # 1. Initialize the Routine object WITHOUT saving it to DB yet
-                new_routine = Routine(
-                    department=dept, course=course_obj, teacher=teacher_obj,
-                    room=room_obj, timeslot=timeslot_obj, semester=semester,
-                    group_no=group_no, day_of_week=day, section=section
-                )
-                
-                # 2. Trigger your models.py clean() method validation
-                new_routine.full_clean()
-                
-                # 3. If no errors, save it!
-                new_routine.save()
-                messages.success(request, "Routine block assigned successfully!")
-                
-            except ValidationError as e:
-                # 4. Catch the conflict error and send it to the UI
-                error_msg = e.messages[0] if hasattr(e, 'messages') else str(e)
-                messages.error(request, error_msg)
-                
-            return redirect('dept_admin_dashboard')
+            routine_id = request.POST.get('routine_id')  # 💡 এডিটের জন্য এই আইডিটা লাগবে
+        course_id = request.POST.get('course_id')
+        teacher_id = request.POST.get('teacher_id_fk')
+        room_id = request.POST.get('room_id')  # অনলাইন হলে এটা খালি আসতে পারে
+        timeslot_id = request.POST.get('timeslot_id')
+        day_of_week = request.POST.get('day_of_week')
+        semester = request.POST.get('semester')
+        group_no = request.POST.get('group_no')
+        class_type = request.POST.get('class_type')
+        is_online = request.POST.get('is_online') == 'true'  # স্ট্রিং থেকে বুনিয়ান কনভার্ট
+        section = request.POST.get('section') if class_type == 'Lab' else None
 
+        try:
+            # অবজেক্টগুলো গেট করা
+            course = Course.objects.get(id=course_id)
+            teacher = Teacher.objects.get(id=teacher_id)
+            timeslot = Timeslot.objects.get(id=timeslot_id)
+            
+            # অনলাইন হলে রুম None হবে, অফলাইন হলে রুম অবজেক্ট গেট করবে
+            room = None
+            if not is_online and room_id:
+                room = Room.objects.get(id=room_id)
+
+            # 💡 মূল জাদুকরী লজিক: এডিট নাকি নতুন ক্রিয়েট?
+            if routine_id:
+                # ১. এডিট মুড: পুরোনো রুটিন অবজেক্ট খুঁজে বের করে আপডেট করা
+                routine = Routine.objects.get(id=routine_id)
+                routine.course = course
+                routine.teacher = teacher
+                routine.room = room
+                routine.timeslot = timeslot
+                routine.day_of_week = day_of_week
+                routine.semester = semester
+                routine.group_no = group_no
+                routine.class_type = class_type
+                routine.is_online = is_online
+                routine.section = section
+                routine.save()
+                messages.success(request, "Routine instance updated successfully!")
+            else:
+                # ২. ক্রিয়েট মুড: নতুন রুটিন তৈরি করা
+                # (ধরে নিচ্ছি 'dept' অবজেক্টটি অলরেডি ভিউতে লগড-ইন অ্যাডমিনের মাধ্যমে ফিল্টার করা আছে)
+                Routine.objects.create(
+                    department=dept,  # কারেন্ট ডিপার্টমেন্ট লক
+                    course=course,
+                    teacher=teacher,
+                    room=room,
+                    timeslot=timeslot,
+                    day_of_week=day_of_week,
+                    semester=semester,
+                    group_no=group_no,
+                    class_type=class_type,
+                    is_online=is_online,
+                    section=section
+                )
+                messages.success(request, "New routine block assigned successfully!")
+
+        except Exception as e:
+            messages.error(request, f"Error processing routine: {str(e)}")
+            
+        return redirect('dept_admin_dashboard')
     # ---------------------------------------------------------
     # FEATURE 4: ADVANCED ROUTINE SEARCH
     # ---------------------------------------------------------
