@@ -86,36 +86,55 @@ class Routine(models.Model):
         ('Friday', 'Friday'), ('Saturday', 'Saturday')
     ]
     
+    CLASS_TYPE_CHOICES = [
+        ('Theory', 'Theory'),
+        ('Lab', 'Lab'),
+    ]
+    
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
     timeslot = models.ForeignKey(Timeslot, on_delete=models.CASCADE)
+    
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    
+    class_type = models.CharField(max_length=10, choices=CLASS_TYPE_CHOICES, default='Theory')
+    is_online = models.BooleanField(default=False)
     
     day_of_week = models.CharField(max_length=15, choices=DAYS_OF_WEEK)
     semester = models.IntegerField(help_text="1 to 8")
     group_no = models.CharField(max_length=5, help_text="A, B, C")
-    section = models.CharField(max_length=10, default="None", help_text="Lab Sec 1, 2 or None for Theory")
+    
+    section = models.CharField(max_length=10, blank=True, null=True, help_text="e.g., A1, B2 (Only for Lab)")
 
     def clean(self):
         # ALGORITHM: Conflict Resolution & Double-Booking Prevention
         
-        # 1. Teacher Overlap: Teacher cannot be in two places at once.
+        if self.is_online:
+            self.room = None 
+        else:
+            if not self.room:
+                raise ValidationError("Conflict: Physical (Offline) classes must select a Room.")
+            
+            if self.class_type == 'Lab' and self.room.class_type != 'Lab':
+                raise ValidationError(f"Warning: Selected room {self.room.room_number} is not a Lab room.")
+
         teacher_conflict = Routine.objects.filter(
             teacher=self.teacher, day_of_week=self.day_of_week, timeslot=self.timeslot
         ).exclude(pk=self.pk).exists()
         if teacher_conflict:
             raise ValidationError(f"Conflict: Teacher {self.teacher.name} is already scheduled at this time.")
 
-        # 2. Room Overlap: Physical rooms cannot double-book.
-        if not self.room.is_online:
+        if not self.is_online and self.room:
             room_conflict = Routine.objects.filter(
                 room=self.room, day_of_week=self.day_of_week, timeslot=self.timeslot
             ).exclude(pk=self.pk).exists()
             if room_conflict:
                 raise ValidationError(f"Conflict: Room {self.room.room_number} is already booked at this time.")
 
-        # 3. Batch Overlap: Same semester/group/section cannot have two classes at once.
+            if self.class_type == 'Lab' and self.room.capacity < 25:
+                raise ValidationError(f"Conflict: Selected Lab room capacity ({self.room.capacity}) is too low for a standard lab section (min 25).")
+
         batch_conflict = Routine.objects.filter(
             department=self.department,
             semester=self.semester,
@@ -125,11 +144,13 @@ class Routine(models.Model):
             timeslot=self.timeslot
         ).exclude(pk=self.pk).exists()
         if batch_conflict:
-            raise ValidationError(f"Conflict: Batch {self.semester}{self.group_no} (Sec: {self.section}) already has a class scheduled at this time.")
+            sec_info = f" (Sec: {self.section})" if self.section else ""
+            raise ValidationError(f"Conflict: Batch {self.semester}{self.group_no}{sec_info} already has a class scheduled at this time.")
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.course.course_code} | {self.day_of_week} | {self.timeslot}"
+        type_str = f"Online {self.class_type}" if self.is_online else f"Offline {self.class_type}"
+        return f"{self.course.course_code} | {type_str} | {self.day_of_week} | {self.timeslot}"

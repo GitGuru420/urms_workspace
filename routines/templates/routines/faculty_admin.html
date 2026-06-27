@@ -107,8 +107,8 @@
                 <label class="text-[11px] font-bold text-gray-700 block mb-1 uppercase tracking-wider">Classroom Type *</label>
                 <select name="class_type" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-400">
                     <option value="">Select Type...</option>
-                    <option value="Theory">Theory Class</option>
-                    <option value="Lab">Computer/Practical Lab</option>
+                    <option value="Theory">Theory</option>
+                    <option value="Lab">Lab</option>
                 </select>
             </div>
         </div>
@@ -184,75 +184,99 @@
         </div>
 
         <div id="panel-assign-class" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4">Centralized Scheduling Engine Allocation</h2>
-            <form method="POST" action="" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="assign_class">
-                
-                <div>
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Academic Department</label>
-                    <select name="department" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Dept Scope...</option>
-                        {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Instructor (Global Access List)</label>
-                    <select name="teacher" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Teacher Name...</option>
-                        {% for t in teachers %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                <div class="lg:col-span-2">
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Course Module Allocation</label>
-                    <select name="course" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Course...</option>
-                        {% for c in courses %}<option value="{{ c.id }}">{{ c.course_code }} - {{ c.title }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Classroom Facility</label>
-                    <select name="room" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Room Facility...</option>
-                        {% for r in rooms %}<option value="{{ r.id }}">Room {{ r.room_number }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Day Execution</label>
-                    <select name="day_of_week" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Day...</option>
-                        {% for d in days %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Timeslot Frame</label>
-                    <select name="timeslot" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                        <option value="">Select Timeslot...</option>
-                        {% for ts in timeslots %}<option value="{{ ts.id }}">{{ ts.start_time|time:"h:i A" }}</option>{% endfor %}
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Semester</label>
-                        <input type="text" name="semester" placeholder="e.g. 8" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Group</label>
-                        <input type="text" name="group_no" placeholder="e.g. A" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                </div>
-
-                <div class="col-span-full pt-1">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Commit System Routine Allocation</button>
-                </div>
-            </form>
+    <h2 class="text-xs font-black uppercase tracking-wide text-gray-900 mb-4" id="form-panel-title">Centralized Scheduling Engine Allocation</h2>
+    
+    <form method="POST" action="" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="assign_class">
+        
+        <input type="hidden" name="routine_id" id="form-routine-id" value="">
+        
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Academic Department</label>
+            <select name="department" id="form-department" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Dept Scope...</option>
+                {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+            </select>
         </div>
+        
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Instructor (Global Access List)</label>
+            <select name="teacher" id="form-teacher" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Teacher Name...</option>
+                {% for t in teachers %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div class="lg:col-span-2">
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Course Module Allocation</label>
+            <select name="course" id="form-course" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Course...</option>
+                {% for c in courses %}<option value="{{ c.id }}">{{ c.course_code }} - {{ c.title }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Class Type</label>
+            <select name="class_type" id="form-class-type" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="Theory">Theory</option>
+                <option value="Lab">Lab</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Class Mode</label>
+            <select name="is_online" id="form-is-online" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="false">Offline (On-Campus)</option>
+                <option value="true">Online (Virtual)</option>
+            </select>
+        </div>
+
+        <div id="wrapper-section" class="hidden">
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Lab Section</label>
+            <input type="text" name="section" id="form-section" placeholder="e.g. A1, B2" class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+        </div>
+
+        <div id="wrapper-room">
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Classroom Facility</label>
+            <select name="room" id="form-room" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Room Facility...</option>
+                {% for r in rooms %}<option value="{{ r.id }}">Room {{ r.room_number }} ({{ r.class_type }})</option>{% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Day Execution</label>
+            <select name="day_of_week" id="form-day" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Day...</option>
+                {% for d in days %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Timeslot Frame</label>
+            <select name="timeslot" id="form-timeslot" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+                <option value="">Select Timeslot...</option>
+                {% for ts in timeslots %}<option value="{{ ts.id }}">{{ ts.start_time|time:"h:i A" }} - {{ ts.end_time|time:"h:i A" }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Semester</label>
+                <input type="text" name="semester" id="form-semester" placeholder="e.g. 8" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <div>
+                <label class="font-bold text-gray-700 block mb-1 uppercase tracking-wider text-[10px]">Group</label>
+                <input type="text" name="group_no" id="form-group" placeholder="e.g. A" required class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2.5 font-semibold focus:ring-2 focus:ring-indigo-400">
+            </div>
+        </div>
+
+        <div class="col-span-full pt-1">
+            <button type="submit" id="form-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-sm">Commit System Routine Allocation</button>
+        </div>
+    </form>
+</div>
 
     </div>
 
@@ -345,5 +369,75 @@
             }
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const classTypeSelect = document.getElementById("form-class-type");
+        const isOnlineSelect = document.getElementById("form-is-online");
+        const wrapperSection = document.getElementById("wrapper-section");
+        const wrapperRoom = document.getElementById("wrapper-room");
+        const roomSelect = document.getElementById("form-room");
+        const sectionInput = document.getElementById("form-section");
+
+        function engineFormValidator() {
+            // ১. ল্যাব ট্রিপ লজিক (Show/Hide Section)
+            if (classTypeSelect.value === "Lab") {
+                wrapperSection.classList.remove("hidden");
+                sectionInput.setAttribute("required", "required");
+            } else {
+                wrapperSection.classList.add("hidden");
+                sectionInput.removeAttribute("required");
+                sectionInput.value = ""; // থিওরি হলে সেকশন ভ্যালু মুছে ফেলা
+            }
+
+            // ২. ক্লাসরুম আইসোলেশন লজিক (Show/Hide Room)
+            if (isOnlineSelect.value === "true") {
+                wrapperRoom.classList.add("hidden");
+                roomSelect.removeAttribute("required");
+                roomSelect.value = ""; // অনলাইন হলে রুম এম্পটি করে দেওয়া
+            } else {
+                wrapperRoom.classList.remove("hidden");
+                roomSelect.setAttribute("required", "required");
+            }
+        }
+
+        classTypeSelect.addEventListener("change", engineFormValidator);
+        isOnlineSelect.addEventListener("change", engineFormValidator);
+        
+        // পেজ লোড হওয়ার সময় বা এডিট মোড ওপেন করার সময় ইনিশিয়াল চেক
+        engineFormValidator();
+    });
+
+    // 💡 এডিট/আপডেট ফিচারটি ট্রিগার করার জন্য গ্লোবাল ফাংশন
+    function populateRoutineEditForm(data) {
+        // প্যানেল হাইড থাকলে আনহাইড করা
+        document.getElementById("panel-assign-class").classList.remove("hidden");
+        
+        // টাইটেল ও বাটনের টেক্সট পরিবর্তন করে "Update মোড" বোঝানো
+        document.getElementById("form-panel-title").innerText = "Update Existing Routine Instance";
+        document.getElementById("form-submit-btn").innerText = "Update System Routine Allocation";
+        
+        // ডেটা পপুলেট করা
+        document.getElementById("form-routine-id").value = data.id;
+        document.getElementById("form-department").value = data.department_id;
+        document.getElementById("form-teacher").value = data.teacher_id;
+        document.getElementById("form-course").value = data.course_id;
+        document.getElementById("form-class-type").value = data.class_type;
+        document.getElementById("form-is-online").value = data.is_online.toString();
+        document.getElementById("form-day").value = data.day_of_week;
+        document.getElementById("form-timeslot").value = data.timeslot_id;
+        document.getElementById("form-semester").value = data.semester;
+        document.getElementById("form-group").value = data.group_no;
+        
+        if(data.class_type === "Lab") {
+            document.getElementById("form-section").value = data.section;
+        }
+        if(data.is_online === false) {
+            document.getElementById("form-room").value = data.room_id;
+        }
+
+        // ইনপুট স্টেটগুলো রি-ভ্যালিড করা
+        document.getElementById("form-class-type").dispatchEvent(new Event('change'));
+    }
+
 </script>
 {% endblock content %}

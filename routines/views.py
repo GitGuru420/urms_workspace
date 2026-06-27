@@ -183,43 +183,77 @@ def faculty_admin_dashboard(request):
                 
             return redirect('faculty_admin_dashboard')
 
-        # Action E: Super Admin Class Assignment
+        # Action E: Super Admin Class Assignment (🆕 Modified to support dynamic Lab/Online logic & Update feature)
         elif action == 'assign_class':
             dept_id = request.POST.get('department')
-            # Security Check: Double-checking ownership before committing to DB
             dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
             
             teacher = get_object_or_404(Teacher, id=request.POST.get('teacher'), department__faculty=current_faculty)
             course = get_object_or_404(Course, id=request.POST.get('course'), department__faculty=current_faculty)
-            room = get_object_or_404(Room, id=request.POST.get('room'))
             timeslot = get_object_or_404(Timeslot, id=request.POST.get('timeslot'))
             
-            # Error Handling Block
+            # 🆕 ১. নতুন ডাইনামিক ফিল্ডগুলোর ভ্যালু রিসিভ করা
+            class_type = request.POST.get('class_type', 'Theory')
+            is_online_raw = request.POST.get('is_online', 'false')
+            is_online = True if is_online_raw == 'true' else False
+            
+            # সেকশন ফিল্টারিং: ল্যাব এবং ইনপুট থাকলে সেকশন বসবে, অন্যথায় None
+            section = request.POST.get('section', '').strip()
+            if class_type != 'Lab' or not section:
+                section = None
+
+            # 🆕 ২. অনলাইন বনাম অফলাইন রুম ডিস্ট্রিবিউশন লজিক
+            room = None
+            if not is_online:
+                room_id = request.POST.get('room')
+                if room_id:
+                    room = get_object_or_404(Room, id=room_id)
+                else:
+                    messages.error(request, "Validation Error: On-Campus (Offline) classes must have an assigned classroom.")
+                    return redirect('faculty_admin_dashboard')
+
+            # 🆕 ৩. ক্রিয়েট নাকি আপডেট করা হচ্ছে তা ট্র্যাক করা
+            routine_id = request.POST.get('routine_id')
+            is_update_operation = False
+            
             from django.core.exceptions import ValidationError
             from django.db import IntegrityError
             
             try:
-                new_routine = Routine(
-                    department=dept,
-                    teacher=teacher,
-                    course=course,
-                    room=room,
-                    timeslot=timeslot,
-                    day_of_week=request.POST.get('day_of_week'),
-                    semester=request.POST.get('semester'),
-                    group_no=request.POST.get('group_no')
-                )
-                new_routine.full_clean() 
-                new_routine.save() 
+                if routine_id:  # যদি ফর্মে routine_id পাঠানো হয়, তবে অবজেক্টটি আপডেট হবে
+                    routine_instance = get_object_or_404(Routine, id=routine_id, department__faculty=current_faculty)
+                    is_update_operation = True
+                else:  # routine_id না থাকলে নতুন করে ডাটাবেসে এন্ট্রি হবে
+                    routine_instance = Routine()
+
+                # অবজেক্টে ডেটা পুশ করা
+                routine_instance.department = dept
+                routine_instance.teacher = teacher
+                routine_instance.course = course
+                routine_instance.room = room
+                routine_instance.timeslot = timeslot
+                routine_instance.day_of_week = request.POST.get('day_of_week')
+                routine_instance.semester = request.POST.get('semester')
+                routine_instance.group_no = request.POST.get('group_no')
+                routine_instance.class_type = class_type
+                routine_instance.is_online = is_online
+                routine_instance.section = section
                 
-                messages.success(request, f"Success: Routine assigned successfully for {course.course_code}!")
+                # মডেলের ভেতরের clean() ভ্যালিডেশন রান করানো
+                routine_instance.full_clean() 
+                routine_instance.save() 
+                
+                if is_update_operation:
+                    messages.success(request, f"Success: Routine instance updated successfully for {course.course_code}!")
+                else:
+                    messages.success(request, f"Success: Routine assigned successfully for {course.course_code}!")
                 
             except ValidationError as e:
                 for err in e.messages:
                     messages.error(request, f"Validation Error: {err}")
                     
             except IntegrityError:
-                messages.error(request, "Database Error: A scheduling conflict occurred. Please check the room or timeslot.")
+                messages.error(request, "Database Error: A scheduling conflict occurred. Please check the room or timeslot integration.")
 
             return redirect('faculty_admin_dashboard')
 
