@@ -314,19 +314,17 @@
                 <div class="col-span-full text-center py-16 text-gray-400 font-bold text-xs border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">No routine matches found matching this parameter footprint.</div>
             {% else %}
                 {% for r in master_routines %}
-                    <div class="p-4 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-3 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm">
                         <div class="flex justify-between font-bold mb-2 text-slate-800">
-                            <span>{{ r.day_of_week|slice:":3" }} • {{ r.timeslot.start_time|time:"h:i A" }}</span>
-                            <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px]">R:{{ r.room.room_number }}</span>
+                            <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                            <span class="bg-indigo-100 text-indigo-800 px-1 rounded">Room: {{ r.room.room_number }} <br> Floor: {{ r.room.floor_no }}</span>
                         </div>
-                        <div class="font-black text-indigo-700 text-base mb-1">{{ r.course.course_code }}</div>
-                        <div class="text-gray-600 font-medium space-y-1">
+                        <div class="font-black text-indigo-700 text-sm">{{ r.course.course_code }}
                             <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
-                            <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] text-gray-500 flex justify-between">
-                                <span>👨‍🏫 {{ r.teacher.name }}</span>
-                                <span class="font-bold text-indigo-600 uppercase text-[10px]">{{ r.department.code }}</span>
-                            </div>
-                            <div class="text-[10px] text-gray-400 mt-1 font-semibold">Sem {{ r.semester }} | Group {{ r.group_no }}</div>
+                        </div>
+                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] flex justify-between">
+                            <div class="text-gray-600 font-medium mt-1">{{ r.teacher.name }}</div>
+                             <div class="text-gray-600 font-medium mt-1">Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
                         </div>
                     </div>
                 {% endfor %}
