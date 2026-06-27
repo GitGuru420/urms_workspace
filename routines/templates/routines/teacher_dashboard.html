@@ -59,20 +59,36 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2 pt-2">
     {% for r in master_routines %}
-        <div class="p-4 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-center font-bold mb-2 text-slate-800">
-                <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
-                <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px]">Room: {{ r.room.room_number }} <br> Floor: {{ r.room.floor_no }}</span>
-            </div>
-            
-            <div class="font-black text-indigo-700 text-base mb-1">{{ r.course.course_code }}</div>
-            
-            <div class="text-gray-600 font-medium space-y-1">
-                <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
-                
-                <div class="pt-2 mt-2 border-t border-gray-200 text-[11px]">
-                    <span class="block text-gray-400">Sem {{ r.semester }} | Group {{ r.group_no }}</span>
+        <div class="p-4 border border-gray-200 rounded-xl bg-slate-50 border-l-4 border-l-indigo-500 text-xs shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-start font-bold mb-2 text-slate-800">
+                    <span>{{ r.day_of_week|slice:":3"|upper }} <br> {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
+                    
+                    {% if r.is_online %}
+                        <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-right text-[10px] font-black uppercase tracking-wide border border-emerald-200">
+                            🌐 Online <br> <span class="text-[9px] text-emerald-600 font-bold">{{ r.class_type|upper }}</span>
+                        </span>
+                    {% else %}
+                        <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-right text-[10px] font-medium">
+                            Room: <span class="font-bold">{{ r.room.room_number }}</span> <br> Floor: {{ r.room.floor_no }}
+                        </span>
+                    {% endif %}
                 </div>
+                
+                <div class="font-black text-indigo-700 text-base mb-1 flex justify-between items-center">
+                    <span>{{ r.course.course_code }}</span>
+                    {% if r.class_type == 'Lab' and r.section %}
+                        <span class="bg-amber-100 text-amber-950 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wide border border-amber-200">SEC: {{ r.section }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="text-gray-600 font-medium space-y-1">
+                    <div class="truncate text-gray-800 font-bold" title="{{ r.course.title }}">{{ r.course.title }}</div>
+                </div>
+            </div>
+
+            <div class="pt-2 mt-2 border-t border-gray-200 text-[11px]">
+                <span class="block text-gray-500 font-bold">Sem {{ r.semester }} | Group {{ r.group_no }}</span>
             </div>
         </div>
     {% empty %}
