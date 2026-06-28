@@ -357,33 +357,41 @@
                             <div class="truncate text-gray-800 font-bold mb-2" title="{{ r.course.title }}">{{ r.course.title }}</div>
                         </div>
                         
-                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px]">
-                            <div class="flex justify-between text-gray-600 font-medium">
-                                <div>{{ r.teacher.name }}</div>
-                                <div>Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
-                            </div>
-                            
-                            <div class="mt-2 flex justify-end">
-                                <button type="button" 
-                                        onclick="populateRoutineEditForm({
-                                            id: '{{ r.id }}',
-                                            department_id: '{{ r.department.id }}',
-                                            teacher_id: '{{ r.teacher.id }}',
-                                            course_id: '{{ r.course.id }}',
-                                            class_type: '{{ r.class_type|default:'Theory' }}',
-                                            is_online: {% if r.is_online %}true{% else %}false{% endif %},
-                                            day_of_week: '{{ r.day_of_week }}',
-                                            timeslot_id: '{{ r.timeslot.id }}',
-                                            semester: '{{ r.semester }}',
-                                            group_no: '{{ r.group_no }}',
-                                            section: '{{ r.section|default:"" }}',
-                                            room_id: '{{ r.room.id|default:"" }}'
-                                        })" 
-                                        class="text-[10px] bg-slate-200 hover:bg-indigo-600 hover:text-white text-gray-700 font-bold px-2 py-0.5 rounded transition-all cursor-pointer">
-                                    ✏️ Edit
-                                </button>
-                            </div>
-                        </div>
+                        <div class="pt-2 mt-2 border-t border-gray-200 text-[11px] flex justify-between items-end">
+                    <div>
+                        <div class="text-gray-600 font-semibold mt-1">{{ r.teacher.name }}</div>
+                        <div class="text-gray-600 font-bold mt-1">Sem: {{ r.semester }} | Group: {{ r.group_no }}</div>
+                    </div>
+                    
+                    <div class="mt-1 flex flex-col items-end gap-1.5">
+                        
+                        <button type="button" 
+                                onclick="populateRoutineEditForm({
+                                    id: '{{ r.id }}',
+                                    department_id: '{{ r.department.id }}',
+                                    teacher_id: '{{ r.teacher.id }}',
+                                    course_id: '{{ r.course.id }}',
+                                    class_type: '{{ r.class_type|default:'Theory' }}',
+                                    is_online: {% if r.is_online %}true{% else %}false{% endif %},
+                                    day_of_week: '{{ r.day_of_week }}',
+                                    timeslot_id: '{{ r.timeslot.id }}',
+                                    semester: '{{ r.semester }}',
+                                    group_no: '{{ r.group_no }}',
+                                    section: '{{ r.section|default:"" }}',
+                                    room_id: '{{ r.room.id|default:"" }}'
+                                })" 
+                                class="w-full text-center text-[10px] bg-slate-200 hover:bg-indigo-600 hover:text-white text-gray-700 font-bold px-2 py-0.5 rounded transition-all cursor-pointer">
+                            ✏️ Edit
+                        </button>
+
+                        <a href="{% url 'delete_routine' r.id %}" 
+                        onclick="return confirm('Are you sure you want to delete this routine block? This action cannot be undone.');" 
+                        class="w-full text-center text-[10px] bg-red-100 hover:bg-red-600 hover:text-white text-red-700 font-bold px-2 py-0.5 rounded transition-all cursor-pointer">
+                            🗑️ Delete
+                        </a>
+                        
+                    </div>
+                </div>
                     </div>
                 {% endfor %}
             {% endif %}

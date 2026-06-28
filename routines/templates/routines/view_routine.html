@@ -86,9 +86,13 @@
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
                             <div class="bg-slate-800 text-slate-100 px-4 py-2 text-xs font-mono font-bold flex justify-between items-center">
                                 <span>⏱️ {{ r.timeslot.start_time|time:"h:i A" }} - {{ r.timeslot.end_time|time:"h:i A" }}</span>
-                                <span class="uppercase tracking-wider px-1.5 py-0.5 rounded text-[10px] {% if r.section != 'None' %} bg-amber-500 text-slate-900 {% else %} bg-blue-600 text-white {% endif %}">
-                                    {% if r.section != 'None' %} Lab Split (Sec {{ r.section }}) {% else %} Theory {% endif %}
-                                </span>
+                                <span class="uppercase tracking-wider px-1.5 py-0.5 rounded text-[10px] {% if r.class_type == 'Lab' %} bg-amber-500 text-slate-900 {% else %} bg-blue-600 text-white {% endif %}">
+                                    {% if r.class_type == 'Lab' %} 
+                                        Lab {% if r.section %}(Sec {{ r.section }}){% endif %} 
+                                    {% else %} 
+                                        Theory 
+                                    {% endif %}
+                            </span>
                             </div>
 
                             <div class="p-5 space-y-3">
@@ -102,13 +106,20 @@
                                         <span class="text-[10px] uppercase text-gray-400 block tracking-wider">Teacher</span>
                                         <span class="font-semibold text-gray-800">{{ r.teacher.name }}</span>
                                     </div>
-                                    <div>
-                                        <span class="font-bold {% if r.room.is_online %} text-emerald-600 {% else %} text-gray-800 {% endif %} block">
-                                            {% if r.room.is_online %} Online Class {% else %} Floor: {{ r.room.floor_no }} {% endif %}
-                                        </span>
-                                        <span class="font-bold {% if r.room.is_online %} text-emerald-600 {% else %} text-gray-800 {% endif %}">
-                                            {% if r.room.is_online %} Online Class {% else %} Room: {{ r.room.room_number }} {% endif %}
-                                        </span>
+                                    
+                                    <div class="text-right">
+                                        {% if r.is_online %}
+                                            <span class="font-bold text-emerald-600 block text-sm">
+                                                🌐 Online Class
+                                            </span>
+                                        {% else %}
+                                            <span class="font-bold text-gray-800 block">
+                                                Floor: {{ r.room.floor_no }}
+                                            </span>
+                                            <span class="font-bold text-gray-800">
+                                                Room: {{ r.room.room_number }}
+                                            </span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

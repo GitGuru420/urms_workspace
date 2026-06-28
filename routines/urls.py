@@ -3,11 +3,11 @@ from . import views
 
 urlpatterns = [
     # Public Pages
-    path('', views.landing_page, name='landing_page'),           # NEW: Front Door
-    path('view-routine/', views.view_routine, name='view_routine'), # ALREADY EXISTS
+    path('', views.landing_page, name='landing_page'),
+    path('view-routine/', views.view_routine, name='view_routine'),
     
     # Authentication
-    path('login/', views.user_login, name='login'),              # UPDATED: Moved to /login/
+    path('login/', views.user_login, name='login'),            
     path('logout/', views.user_logout, name='logout'),
     
     # Dashboards

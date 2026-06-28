@@ -8,9 +8,8 @@ from .models import Routine, Department, Faculty, FacultyAdminProfile, DeptAdmin
 import csv
 from django.http import HttpResponse
 
-# ==========================================
+
 # PUBLIC & AUTHENTICATION VIEWS
-# ==========================================
 def landing_page(request):
     return render(request, 'routines/index.html')
 
@@ -44,9 +43,7 @@ def user_logout(request):
     logout(request)
     return redirect('landing_page')
 
-# ==========================================
-# SUPERUSER MASTER DASHBOARD
-# ==========================================
+# SUPERUSER MASTER DASHBOARD (Not Completed Yet)
 @login_required(login_url='login')
 def superuser_dashboard(request):
     if not request.user.is_superuser:
@@ -92,14 +89,13 @@ def superuser_dashboard(request):
     }
     return render(request, 'routines/superuser.html', context)
 
-# ==========================================
-# UPGRADED: FACULTY ADMIN WORKSPACE (With Create Dept & Admin Lookup)
-# ==========================================
+
+# FACULTY ADMIN WORKSPACE
 @login_required(login_url='login')
 def faculty_admin_dashboard(request):
     # 1. Get Logged-in Faculty Admin Profile and their assigned Faculty
     faculty_profile = get_object_or_404(FacultyAdminProfile, user=request.user)
-    current_faculty = faculty_profile.faculty  # This locks the scope (e.g., Engineering Faculty)
+    current_faculty = faculty_profile.faculty 
 
     # 2. Handle Form Submissions (POST Requests) with Faculty Lockdown Security
     if request.method == 'POST':
@@ -183,7 +179,7 @@ def faculty_admin_dashboard(request):
                 
             return redirect('faculty_admin_dashboard')
 
-        # Action E: Super Admin Class Assignment (🆕 Modified to support dynamic Lab/Online logic & Update feature)
+        # Action E: Super Admin Class Assignment 
         elif action == 'assign_class':
             dept_id = request.POST.get('department')
             dept = get_object_or_404(Department, id=dept_id, faculty=current_faculty)
@@ -192,17 +188,13 @@ def faculty_admin_dashboard(request):
             course = get_object_or_404(Course, id=request.POST.get('course'), department__faculty=current_faculty)
             timeslot = get_object_or_404(Timeslot, id=request.POST.get('timeslot'))
             
-            # 🆕 ১. নতুন ডাইনামিক ফিল্ডগুলোর ভ্যালু রিসিভ করা
             class_type = request.POST.get('class_type', 'Theory')
             is_online_raw = request.POST.get('is_online', 'false')
             is_online = True if is_online_raw == 'true' else False
             
-            # সেকশন ফিল্টারিং: ল্যাব এবং ইনপুট থাকলে সেকশন বসবে, অন্যথায় None
             section = request.POST.get('section', '').strip()
             if class_type != 'Lab' or not section:
                 section = None
-
-            # 🆕 ২. অনলাইন বনাম অফলাইন রুম ডিস্ট্রিবিউশন লজিক
             room = None
             if not is_online:
                 room_id = request.POST.get('room')
@@ -212,7 +204,6 @@ def faculty_admin_dashboard(request):
                     messages.error(request, "Validation Error: On-Campus (Offline) classes must have an assigned classroom.")
                     return redirect('faculty_admin_dashboard')
 
-            # 🆕 ৩. ক্রিয়েট নাকি আপডেট করা হচ্ছে তা ট্র্যাক করা
             routine_id = request.POST.get('routine_id')
             is_update_operation = False
             
@@ -220,13 +211,12 @@ def faculty_admin_dashboard(request):
             from django.db import IntegrityError
             
             try:
-                if routine_id:  # যদি ফর্মে routine_id পাঠানো হয়, তবে অবজেক্টটি আপডেট হবে
+                if routine_id:
                     routine_instance = get_object_or_404(Routine, id=routine_id, department__faculty=current_faculty)
                     is_update_operation = True
-                else:  # routine_id না থাকলে নতুন করে ডাটাবেসে এন্ট্রি হবে
+                else: 
                     routine_instance = Routine()
 
-                # অবজেক্টে ডেটা পুশ করা
                 routine_instance.department = dept
                 routine_instance.teacher = teacher
                 routine_instance.course = course
@@ -238,8 +228,7 @@ def faculty_admin_dashboard(request):
                 routine_instance.class_type = class_type
                 routine_instance.is_online = is_online
                 routine_instance.section = section
-                
-                # মডেলের ভেতরের clean() ভ্যালিডেশন রান করানো
+                 
                 routine_instance.full_clean() 
                 routine_instance.save() 
                 
@@ -319,9 +308,8 @@ def faculty_admin_dashboard(request):
     }
     return render(request, 'routines/faculty_admin.html', context)
 
-# ==========================================
+
 # DEPENDENT INNER WORKSPACES (Unchanged)
-# ==========================================
 @login_required(login_url='login')
 def dept_admin_dashboard(request):
     if not hasattr(request.user, 'deptadminprofile'):
@@ -332,9 +320,7 @@ def dept_admin_dashboard(request):
     parent_faculty = dept.faculty
     
     if request.method == 'POST':
-        # ---------------------------------------------------------
         # FEATURE 1: CREATE TEACHER
-        # ---------------------------------------------------------
         if 'create_teacher' in request.POST:
             teacher_id = request.POST.get('teacher_id', '').strip()
             name = request.POST.get('name', '').strip()
@@ -351,9 +337,7 @@ def dept_admin_dashboard(request):
                 messages.success(request, f"Success! Teacher {name} ({teacher_id}) created.")
             return redirect('dept_admin_dashboard')
             
-        # ---------------------------------------------------------
         # FEATURE 2: CREATE COURSE
-        # ---------------------------------------------------------
         elif 'create_course' in request.POST:
             code = request.POST.get('course_code', '').strip()
             title = request.POST.get('title', '').strip()
@@ -365,36 +349,30 @@ def dept_admin_dashboard(request):
                 messages.success(request, f"Course [{code}] successfully added.")
             return redirect('dept_admin_dashboard')
             
-        # ---------------------------------------------------------
         # FEATURE 3: ASSIGN ROUTINE (Updated with Error Handling)
-        # ---------------------------------------------------------
         elif 'assign_routine' in request.POST:
-            routine_id = request.POST.get('routine_id')  # 💡 এডিটের জন্য এই আইডিটা লাগবে
+            routine_id = request.POST.get('routine_id')
         course_id = request.POST.get('course_id')
         teacher_id = request.POST.get('teacher_id_fk')
-        room_id = request.POST.get('room_id')  # অনলাইন হলে এটা খালি আসতে পারে
+        room_id = request.POST.get('room_id') 
         timeslot_id = request.POST.get('timeslot_id')
         day_of_week = request.POST.get('day_of_week')
         semester = request.POST.get('semester')
         group_no = request.POST.get('group_no')
         class_type = request.POST.get('class_type')
-        is_online = request.POST.get('is_online') == 'true'  # স্ট্রিং থেকে বুনিয়ান কনভার্ট
+        is_online = request.POST.get('is_online') == 'true' 
         section = request.POST.get('section') if class_type == 'Lab' else None
 
         try:
-            # অবজেক্টগুলো গেট করা
             course = Course.objects.get(id=course_id)
             teacher = Teacher.objects.get(id=teacher_id)
             timeslot = Timeslot.objects.get(id=timeslot_id)
             
-            # অনলাইন হলে রুম None হবে, অফলাইন হলে রুম অবজেক্ট গেট করবে
             room = None
             if not is_online and room_id:
                 room = Room.objects.get(id=room_id)
 
-            # 💡 মূল জাদুকরী লজিক: এডিট নাকি নতুন ক্রিয়েট?
             if routine_id:
-                # ১. এডিট মুড: পুরোনো রুটিন অবজেক্ট খুঁজে বের করে আপডেট করা
                 routine = Routine.objects.get(id=routine_id)
                 routine.course = course
                 routine.teacher = teacher
@@ -409,10 +387,8 @@ def dept_admin_dashboard(request):
                 routine.save()
                 messages.success(request, "Routine instance updated successfully!")
             else:
-                # ২. ক্রিয়েট মুড: নতুন রুটিন তৈরি করা
-                # (ধরে নিচ্ছি 'dept' অবজেক্টটি অলরেডি ভিউতে লগড-ইন অ্যাডমিনের মাধ্যমে ফিল্টার করা আছে)
                 Routine.objects.create(
-                    department=dept,  # কারেন্ট ডিপার্টমেন্ট লক
+                    department=dept, 
                     course=course,
                     teacher=teacher,
                     room=room,
@@ -430,9 +406,8 @@ def dept_admin_dashboard(request):
             messages.error(request, f"Error processing routine: {str(e)}")
             
         return redirect('dept_admin_dashboard')
-    # ---------------------------------------------------------
+    
     # FEATURE 4: ADVANCED ROUTINE SEARCH
-    # ---------------------------------------------------------
     routines = None 
 
     if 'search_day' in request.GET: 
@@ -453,9 +428,8 @@ def dept_admin_dashboard(request):
         if search_teacher:
             routines = routines.filter(teacher_id=search_teacher)
 
-    # ---------------------------------------------------------
+   
     # FEATURE 5: CSV/EXCEL EXPORT
-    # ---------------------------------------------------------
     if request.GET.get('export_csv') == '1':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{dept.name}_Routine_Export.csv"'
@@ -472,9 +446,7 @@ def dept_admin_dashboard(request):
             ])
         return response
 
-    # ---------------------------------------------------------
     # Basic queries for dropdowns and lists
-    # ---------------------------------------------------------
     courses = Course.objects.filter(department=dept)
     teachers = Teacher.objects.filter(department=dept).order_by('name') 
     faculty_rooms = Room.objects.filter(faculty=parent_faculty).order_by('floor_no', 'room_number')
