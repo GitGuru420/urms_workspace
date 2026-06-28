@@ -1,6 +1,8 @@
 from pathlib import Path
 import dj_database_url 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fr053__#tl@a7sl9$0bz4fazi)5&r$mlpr*2n%y-sg+$qyy_#m'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -66,7 +68,7 @@ WSGI_APPLICATION = 'urms_project.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_DVdA8ySuv0EM@ep-rough-dust-aok5yvno-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        default=os.getenv('SECRET_KEY'),
         conn_max_age=600
     )
 }
